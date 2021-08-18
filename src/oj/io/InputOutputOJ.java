@@ -673,9 +673,31 @@ public class InputOutputOJ {
 			IJ.showMessage(version, msg);
 		}
 		dataOj.setChanged(false);
+                
+                //KB added pref here to retain the last opened project for next time
+                Prefs.set("lastopened.directory", directory);
+                Prefs.set("lastopened.filename", filename);
+                
 		return dataOj;
 	}
 
+            
+        /**
+         * Loads the last opened project. Asks to load a project if there is a problem.
+         */
+        public DataOJ loadProjectLastOpened() {
+            //KB added pref here to retain the last opened project for next time
+            String directory=Prefs.get("lastopened.directory", "");
+            String filename=Prefs.get("lastopened.filename", "");
+            Prefs.savePreferences();
+            if(directory == "" || filename==""){
+                    return loadProjectWithDialog();
+            }else{	
+                    return loadAProject(directory, filename);
+            }
+        }
+        
+   
 	/**
 	 *
 	 * Special exception object for project IO doesn't do anything special

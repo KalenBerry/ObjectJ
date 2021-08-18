@@ -7,7 +7,9 @@
 package oj.gui.menuactions;
 
 import ij.IJ;
+import ij.ImagePlus;
 import ij.WindowManager;
+import ij.Prefs;
 import ij.gui.YesNoCancelDialog;
 import ij.plugin.PluginInstaller;
 import ij.plugin.frame.Editor;
@@ -60,6 +62,22 @@ public class ProjectActionsOJ {
 	    }
 	}
     };
+    
+        public static ActionListener OpenLastProjectAction = new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+            if (resetProjectData()) {
+                OJ.setData(new InputOutputOJ().loadProjectLastOpened());
+                if (OJ.getData() != null) {
+                    OJ.getData().getCells().killBadCells();
+                    OJ.getData().getCells().sortCells();
+                    OJ.getData().setChanged(false);
+                    ProjectActionsOJ.initProject();     
+                    ProjectActionsOJ.openImagesFromLastProject();
+                }
+            }
+        }
+    };
+    
     public static ActionListener CloseProjectAction = new ActionListener() {
 	public void actionPerformed(ActionEvent e) {
 	    resetProjectData();
@@ -218,6 +236,20 @@ public class ProjectActionsOJ {
 	return false;
     }
 
+    
+        private static void openImagesFromLastProject(){
+        
+    	String imagesOpenLastProject=Prefs.get("ObjectJ.imagesOpenLastProject","");
+        if (imagesOpenLastProject != null){
+            String[] strArray= imagesOpenLastProject.split(",");
+                for (String index : strArray) {
+                    String iName = OJ.getData().getImages().getImageByIndex(Integer.parseInt(index) - 1).getFilename();
+                    OJ.getImageProcessor().openImage(iName);
+                }
+        }
+    }
+    
+    
     private static void initProject() {
 	OJ.getImageProcessor().updateImagesProperties();
 
@@ -241,6 +273,8 @@ public class ProjectActionsOJ {
 
 	OJ.getData().setChanged(false);
     }
+    
+    
 
     private static void saveEmptyCopy() {
 	new InputOutputOJ().saveEmptyProject(OJ.getData());
@@ -309,6 +343,21 @@ public class ProjectActionsOJ {
 	    if (ProjectSettingsOJ.getInstance() != null) {
 		ProjectSettingsOJ.getInstance().setVisible(true);
 	    }
+                      
+             //save open windows regardless
+            String imagesOpenLastProject="";
+            int numImages=OJ.getData().getImages().getImagesCount();
+            for(int iNum=1;iNum<=numImages;iNum++){
+        	ImagePlus openCheck=OJ.getData().getImages().getImageByIndex(iNum-1).getImagePlus();//null if not open<0;
+               	if(openCheck!= null){
+        		imagesOpenLastProject=imagesOpenLastProject+Integer.toString(iNum)+",";   
+        	}
+            }
+            if (imagesOpenLastProject.length()!=0){
+        	imagesOpenLastProject=imagesOpenLastProject.substring(0,imagesOpenLastProject.length()-1);//remove that last comma from the loop above
+        	Prefs.set("ObjectJ.imagesOpenLastProject", imagesOpenLastProject);
+            }
+            
 	    String filename = OJ.getData().getFilename();
 	    YesNoCancelDialog d = new YesNoCancelDialog(IJ.getInstance(), "Closing Project ", "Save Changes to Project \n\"" + filename + "\" ?");
 
