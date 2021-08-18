@@ -4,8 +4,6 @@
  */
 package oj.gui.settings;
 
-import ij.IJ;
-import ij.gui.GenericDialog;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -63,9 +61,7 @@ public class YtemDefsSettingsOJ extends javax.swing.JPanel implements TableColum
     private JComboBox markerSelector = new JComboBox();
     private Dimension panelSize = new Dimension(621, 325);
 
-    /**
-     * Creates new form ObjectDefSettingsOJ
-     */
+    /** Creates new form ObjectDefSettingsOJ */
     public YtemDefsSettingsOJ() {
         initComponents();
         initExtComponents();
@@ -102,7 +98,7 @@ public class YtemDefsSettingsOJ extends javax.swing.JPanel implements TableColum
         jPanel1.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 22, 5, 5));
         jPanel1.setLayout(new java.awt.GridLayout(2, 2, 4, 4));
 
-        chkShowObjectLabel.setText("Show Object Number");
+        chkShowObjectLabel.setText("Show Object Label");
         chkShowObjectLabel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 chkShowObjectLabelActionPerformed(evt);
@@ -227,19 +223,8 @@ public class YtemDefsSettingsOJ extends javax.swing.JPanel implements TableColum
     }//GEN-LAST:event_chkShowObjectLabelActionPerformed
 
     private void chkCompositeObjectsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkCompositeObjectsActionPerformed
-        int flags = evt.getModifiers();
-        if ((flags & evt.ALT_MASK) > 0) {
-            OJ.getData().getYtemDefs().setComposite(chkCompositeObjects.isSelected());
-            OJ.getEventProcessor().fireYtemDefChangedEvent(null, YtemDefChangedEventOJ.COLLECT_MODE_CHANGED);
-        } else {
-            chkCompositeObjects.setSelected(!chkCompositeObjects.isSelected());//undo
-            GenericDialog gd = new GenericDialog("Composite Objects", IJ.getInstance());
-            gd.addMessage("Alt key must be down to change the 'Composite' checkbox");
-            gd.addMessage("For more information, click 'Help'");
-            gd.addHelp(OJ.URL + "/3b-ManualTools.html");
-            gd.showDialog();
-        }
-
+        OJ.getData().getYtemDefs().setComposite(chkCompositeObjects.isSelected());
+        OJ.getEventProcessor().fireYtemDefChangedEvent(YtemDefChangedEventOJ.COLLECT_MODE_CHANGED);
     }//GEN-LAST:event_chkCompositeObjectsActionPerformed
 
     private void chk3DObjectsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chk3DObjectsActionPerformed
@@ -364,6 +349,7 @@ private void btnRebuildActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
         typeSelector.setModel(new TypeModelOJ());
         typeSelector.setRenderer(typeRenderer);
         typeSelector.addActionListener(new ActionListener() {
+
             public void actionPerformed(ActionEvent e) {
                 checkForOpenCell();
                 int index = tblYtemDefs.getSelectedRow();
@@ -389,6 +375,7 @@ private void btnRebuildActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
         lineSelector.setModel(new LineModelOJ());
         lineSelector.setRenderer(lineRenderer);
         lineSelector.addActionListener(new ActionListener() {
+
             public void actionPerformed(ActionEvent e) {
                 checkForOpenCell();
                 int index = tblYtemDefs.getSelectedRow();
@@ -411,6 +398,7 @@ private void btnRebuildActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
         markerSelector.setModel(new MarkerModelOJ());
         markerSelector.setRenderer(markerRenderer);
         markerSelector.addActionListener(new ActionListener() {
+
             public void actionPerformed(ActionEvent e) {
                 ij.IJ.wait(200);
                 checkForOpenCell();
@@ -437,6 +425,7 @@ private void btnRebuildActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
         colorSelector.setModel(new ColorModelOJ());
         colorSelector.setRenderer(colorRenderer);
         colorSelector.addActionListener(new ActionListener() {
+
             public void actionPerformed(ActionEvent e) {
                 checkForOpenCell();
                 int index = tblYtemDefs.getSelectedRow();
@@ -445,9 +434,9 @@ private void btnRebuildActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
                 Color lineColor = objectDef.getLineColor();//16.9.2009
 
                 if (colorIndex == (((ColorModelOJ) colorSelector.getModel()).getSize() - 1)) {
-                    Color fancyColor  = JColorChooser.showDialog(null, "Choose Object Color", lineColor);
-                    if (fancyColor != null) {
-                        objectDef.setLineColor(fancyColor);
+                    lineColor = JColorChooser.showDialog(null, "Choose Object Color", lineColor);
+                    if (lineColor == null) {
+                        lineColor = objectDef.getLineColor();
                     }
                 } else {
 
@@ -467,6 +456,7 @@ private void btnRebuildActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
         });
 
         nameEditor.addFocusListener(new FocusListener() {
+
             int index;
             YtemDefOJ ytemDef;
 
@@ -499,6 +489,7 @@ private void btnRebuildActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
         });
 
         cloneEditor.addFocusListener(new FocusListener() {
+
             int index;
             YtemDefOJ ytemDef;
 
@@ -776,8 +767,7 @@ private void btnRebuildActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
         }
 
         public void fireTableUpdated() {
-            //fireTableRowsUpdated(0, getRowCount());//29.5.2010
-            fireTableRowsUpdated(0, 0);
+            fireTableRowsUpdated(0, getRowCount());
         }
 
         public void fireTableRowUpdated(int index) {
@@ -812,6 +802,8 @@ private void btnRebuildActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FI
                 return null;
             }
         }
+
+
     }
 
     class TypeRendererOJ extends JLabel implements ListCellRenderer {

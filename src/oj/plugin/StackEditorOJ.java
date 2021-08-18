@@ -30,7 +30,6 @@ public class StackEditorOJ extends StackEditor {
      * adjusted and the user is asked to resave and overwrite 
      * the old image (what he should do).
      */
-
     public void run(String arg) {
 
         ImagePlus imp = IJ.getImage();
@@ -43,83 +42,69 @@ public class StackEditorOJ extends StackEditor {
             return;
         }
 
-        if (imp.getStack().isVirtual()) {
+        if (arg.equals("add")) {
+            IJ.error("Cannot add slice to a linked stack");//because it does not work yet
+            return;
+        }
+        
+        if (imp.getStack().isVirtual()){
             IJ.error("Cannot delete slice from linked virtual stack");//because it does not work yet
             return;
         }
-
+                
         int imgID1 = imp.getID();
         int thisSlice = imp.getCurrentSlice();
 
         int nChannels1 = imp.getDimensions()[2];//13.8.2013
         int nSlices1 = imp.getDimensions()[3];
         int nFrames1 = imp.getDimensions()[4];
-        int stackSize1 = imp.getStackSize();
         if (nSlices1 > 1 && nFrames1 > 1) {
             IJ.error("Not possible on 5D- stack");//because it does not work yet
             return;
         }
 
-        if (arg.equals("add")) {//2.9.2014
-            if (stackSize1 == 1) {
-                IJ.error("In a linked image, cannot add a slice to non-stack");
-                return;
-            }
-            if (nChannels1 > 1 || (nFrames1 > 1 && nSlices1 > 1) || stackSize1 != thisSlice || stackSize1 == 1) {
-                IJ.error("To a linked image, only can add a slice to the end of a non-hyperstack");
-                return;
-            }
-        }
         super.run(arg);//DELETING SLICES
-        if (arg.equals("add") && stackSize1 != imp.getStackSize()) {//2.9.2014
-            ImageOJ imj = OJ.getData().getImages().getImageByName(imp.getTitle());
-            if (imj != null) {
-                OJ.getDataProcessor().updateCellsAfterAddSlice(imp.getTitle(), imp.getStackSize());
-                imj.setNumberOfFrames(1);
-                imj.setNumberOfSlices(imp.getStackSize());
-                imj.setNumberOfChannels(1);
-            }
+        int imgID2 = imp.getID();
+        int[] deletedImages;
+        int nChannels2 = imp.getDimensions()[2];//13.8.2013
+        int nSlices2 = imp.getDimensions()[3];
+        int nFrames2 = imp.getDimensions()[4];
+        if (nChannels1 != nChannels2) {
+            IJ.error("Cannot delete a channel of linked image- please undo via File>Revert");//because it does not work yet
+            return;
         }
-        if (arg.equals("delete")) {
-            int imgID2 = imp.getID();
-            int[] deletedImages;
-            int nChannels2 = imp.getDimensions()[2];//13.8.2013
-            int nSlices2 = imp.getDimensions()[3];
-            int nFrames2 = imp.getDimensions()[4];
-            if (nChannels1 != nChannels2) {
-                IJ.error("Cannot delete a channel of linked image- please undo via File>Revert");//because it does not work yet
-                return;
-            }
 
-            if (nSlices2 < nSlices1 || nFrames2 < nFrames1) {
-                deletedImages = new int[nChannels2];
-                int firstDeleted = ((thisSlice - 1) / nChannels2) * nChannels2 + 1;
+        if (nSlices2 < nSlices1 || nFrames2 < nFrames1) {
+            deletedImages = new int[nChannels2];
+            int firstDeleted = ((thisSlice - 1) / nChannels2) * nChannels2 + 1;
 
-                for (int jj = 0; jj < nChannels2; jj++) {
-                    deletedImages[jj] = firstDeleted + jj;
-
-                }
-
-                OJ.getDataProcessor().adjustZPositions(imp.getTitle(), deletedImages);
-
-                OJ.getData().getCells().killMarkedCells();
-                OJ.getEventProcessor().fireCellChangedEvent();
-                boolean showChangeMessage = false;
-                ImageOJ imageOj = OJ.getData().getImages().getImageByName(imp.getTitle());
-                OJ.getImageProcessor().applyImageGraphics(imp, imageOj, showChangeMessage);
-                if (imgID1 == imgID2 && !IJ.isMacro()) {
-                    boolean doSave = IJ.showMessageWithCancel("Save", "Decreased stack needs to be re-saved. \n(You should click OK to save now)");
-                    if (doSave) {
-                        FileSaver fileSaver = new FileSaver(imp);
-                        fileSaver.save();
-
-                        //String dir = imp.getOriginalFileInfo().directory;
-                        //fileSaver.saveAsTiff(dir + imp.getTitle());
-                    }
-                }
+            for (int jj = 0; jj < nChannels2; jj++) {
+                deletedImages[jj] = firstDeleted + jj;
 
             }
+
+            OJ.getDataProcessor().adjustZPositions(imp.getTitle(), deletedImages);
+
+            OJ.getData().getCells().killMarkedCells();
+            OJ.getEventProcessor().fireCellChangedEvent();
+            boolean showChangeMessage = false;
+            ImageOJ imageOj = OJ.getData().getImages().getImageByName(imp.getTitle());
+            OJ.getImageProcessor().applyImageGraphics(imp, imageOj, showChangeMessage);
+            if (imgID1 == imgID2 && !IJ.isMacro()) {
+                boolean doSave = IJ.showMessageWithCancel("Save", "Decreased stack needs to be re-saved. \n(You should click OK to save now)");
+                if (doSave) {
+                    FileSaver fileSaver = new FileSaver(imp);
+                    fileSaver.save();
+             
+                    //String dir = imp.getOriginalFileInfo().directory;
+
+                    //fileSaver.saveAsTiff(dir + imp.getTitle());
+                }
+            }
+
+
         }
+        
     }
     static ArrayList stackChangedListeners = new ArrayList();
 
@@ -127,14 +112,17 @@ public class StackEditorOJ extends StackEditor {
         if (stackChangedListeners.indexOf(listener) < 0) {
             stackChangedListeners.add(listener);
 
+
         }
     }
 
     public static void removeStackChangedListener(StackChangedListenerOJ listener) {
         int index = stackChangedListeners.indexOf(listener);
 
+
         if (index > 0) {
             stackChangedListeners.remove(index);
+
 
         }
     }
@@ -144,6 +132,7 @@ public class StackEditorOJ extends StackEditor {
                 < stackChangedListeners.size(); i++) {
             ((StackChangedListenerOJ) stackChangedListeners.get(i)).sliceDeleted(imp, slice);
 
+
         }
     }
 
@@ -151,6 +140,7 @@ public class StackEditorOJ extends StackEditor {
         for (int i = 0; i
                 < stackChangedListeners.size(); i++) {
             ((StackChangedListenerOJ) stackChangedListeners.get(i)).sliceAdded(imp, slice);
+
 
         }
     }
@@ -160,6 +150,7 @@ public class StackEditorOJ extends StackEditor {
                 < stackChangedListeners.size(); i++) {
             ((StackChangedListenerOJ) stackChangedListeners.get(i)).imagesToStack(imp, slices);
 
+
         }
     }
 
@@ -167,6 +158,7 @@ public class StackEditorOJ extends StackEditor {
         for (int i = 0; i
                 < stackChangedListeners.size(); i++) {
             ((StackChangedListenerOJ) stackChangedListeners.get(i)).stackToImages(imp, images);
+
 
         }
     }
@@ -286,11 +278,15 @@ public class StackEditorOJ extends StackEditor {
                     UtilsOJ.showException(ex, mName);//22.6.2009
                 }
 
+
                 break;
             }
         }
 
         UtilsOJ.showException(null, mName);//22.6.2009
+
+
+
 
         return null;
     }

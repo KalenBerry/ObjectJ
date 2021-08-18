@@ -16,7 +16,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import oj.OJ;
 import oj.macros.EmbeddedMacrosOJ;
 import oj.util.UtilsOJ;
 import oj.gui.results.ProjectResultsOJ;
@@ -26,99 +25,92 @@ import oj.gui.settings.ProjectSettingsOJ;
 
 public class ViewActionsOJ {
 
-	/**
-	 * Used to make project window visible
-	 */
-	public static ActionListener SettingsAction = new ActionListener() {
+    /** Used to make project window visible*/
+    public static ActionListener SettingsAction = new ActionListener() {
 
-		public void actionPerformed(ActionEvent e) {
+        public void actionPerformed(ActionEvent e) {
 
-			if (Recorder.record && !IJ.isMacro()) {//my first recorded macro command
-				Recorder.record("ojShowProject");
-			}
-			if (ProjectSettingsOJ.getInstance() != null) {
-				ProjectSettingsOJ.getInstance().validate();
-				ProjectSettingsOJ.getInstance().setVisible(true);
 
-			} else {
-				new ProjectSettingsOJ();
-				ProjectSettingsOJ.getInstance().validate();
-				ProjectSettingsOJ.getInstance().setVisible(true);
-				// ProjectSettingsOJ.getInstance().setState(Frame.NORMAL);
-			}
-			if (ProjectSettingsOJ.getInstance().getState() == Frame.ICONIFIED) {//30.10.2011
-				ProjectSettingsOJ.getInstance().setState(Frame.NORMAL);
-			}
+            if (Recorder.record && !IJ.isMacro()) {//my first recorded macro command
+                Recorder.record("ojShowProject");
+            }
+            if (ProjectSettingsOJ.getInstance() != null) {
+                ProjectSettingsOJ.getInstance().validate();
+                ProjectSettingsOJ.getInstance().setVisible(true);
 
-			ProjectSettingsOJ.getInstance().toFront();
-		}
-	};
-	/**
-	 * Used to add listeners to the item list at the bottom of ObjectJ tools
-	 */
-	public static ActionListener YtemListAction = new ActionListener() {
+            } else {
+                new ProjectSettingsOJ();
+                ProjectSettingsOJ.getInstance().validate();
+                ProjectSettingsOJ.getInstance().setVisible(true);
+                // ProjectSettingsOJ.getInstance().setState(Frame.NORMAL);
+            }
+            if (ProjectSettingsOJ.getInstance().getState() == Frame.ICONIFIED) {//30.10.2011
+                ProjectSettingsOJ.getInstance().setState(Frame.NORMAL);
+            }
 
-		public void actionPerformed(ActionEvent e) {
-			if (ToolsWindowOJ.getInstance() == null) {
-				if (IJ.isMacintosh()) {
-					ToolsWindowOJ.setInstance(new JFrame("OjTools"));//31.3.2021
-					ToolsWindowOJ.getInstance().addKeyListener(KeyEventManagerOJ.getInstance());
-					ToolsWindowOJ.getInstance().addWindowListener(new java.awt.event.WindowAdapter() {
+            ProjectSettingsOJ.getInstance().toFront();
+        }
+    };
+    /**
+     * Used to add listeners to the item list at the bottom of ObjectJ tools
+     */
+    public static ActionListener YtemListAction = new ActionListener() {
 
-						public void windowActivated(java.awt.event.WindowEvent evt) {
-							if (IJ.isMacintosh() && IJ.getInstance() != null) {
-								IJ.wait(1); // needed for 1.4.1 on OS X
-								if (((Frame) ToolsWindowOJ.getInstance()).getMenuBar() != Menus.getMenuBar()) {
-									((Frame) ToolsWindowOJ.getInstance()).setMenuBar(Menus.getMenuBar());
-								}
-							}
-						}
-					});
-				} else {
-					ToolsWindowOJ.setInstance(new JDialog());
-				}
+        public void actionPerformed(ActionEvent e) {
+            if (ToolsWindowOJ.getInstance() == null) {
+                if (IJ.isMacintosh()) {
+                    ToolsWindowOJ.setInstance(new JFrame());
+                    ToolsWindowOJ.getInstance().addKeyListener(KeyEventManagerOJ.getInstance());
+                    ToolsWindowOJ.getInstance().addWindowListener(new java.awt.event.WindowAdapter() {
 
-			}
-			ToolsWindowOJ.getInstance().setVisible(true);
-		}
-	};
+                        public void windowActivated(java.awt.event.WindowEvent evt) {
+                            if (IJ.isMacintosh() && IJ.getInstance() != null) {
+                                IJ.wait(1); // needed for 1.4.1 on OS X
+                                if (((Frame) ToolsWindowOJ.getInstance()).getMenuBar() != Menus.getMenuBar()) {
+                                    ((Frame) ToolsWindowOJ.getInstance()).setMenuBar(Menus.getMenuBar());
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    ToolsWindowOJ.setInstance(new JDialog());
+                }
 
-	/**
-	 * called to make the ObjectJ results window visible
-	 */
-	public static ActionListener ResultsViewAction = new ActionListener() {
+            }
+            ToolsWindowOJ.getInstance().setVisible(true);
+        }
+    };
+    
+    
+    /** called to make the ObjectJ results window visible
+     */
+    public static ActionListener ResultsViewAction = new ActionListener() {
 
-		public void actionPerformed(ActionEvent e) {
-			try {
-				if (ProjectResultsOJ.getInstance() == null) {//30.10.2011
-					new ProjectResultsOJ();
-				}
-				ProjectResultsOJ.getInstance().setVisible(true);
-				ProjectResultsOJ.getInstance().setState(Frame.NORMAL);
-				ProjectResultsOJ.getInstance().toFront();
-				ProjectResultsOJ.getInstance().friendlyScroll();
-			} catch (Exception ex) {
-				IJ.log("ResultsViewAction:  " + ex.toString());//24.11.2018
-			}
-		}
-	};
-	/**
-	 * calls a macro to tell Finder/Explorer to show the project folder
-	 */
-	public static ActionListener ShowProjectFolderAction = new ActionListener() {//7.6.2009
+        public void actionPerformed(ActionEvent e) {
+            if (ProjectResultsOJ.getInstance() == null) {//30.10.2011
+                new ProjectResultsOJ();
+            }
+            ProjectResultsOJ.getInstance().setVisible(true);
+            ProjectResultsOJ.getInstance().setState(Frame.NORMAL);
+            ProjectResultsOJ.getInstance().toFront();
+        }
+    };
+    /** calls a macro to tell Finder/Explorer to show the project folder
+     */
+    public static ActionListener ShowProjectFolderAction = new ActionListener() {//7.6.2009
 
-		public void actionPerformed(ActionEvent e) {
-			UtilsOJ.showInFinderOrExplorer();
-		}
-	};
-	public static ActionListener ShowEmbeddedMacroAction = new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+            UtilsOJ.showInFinderOrExplorer();
+        }
+    };
+    public static ActionListener ShowEmbeddedMacroAction = new ActionListener() {
 
-		public void actionPerformed(ActionEvent e) {
-			EmbeddedMacrosOJ emb = EmbeddedMacrosOJ.getInstance();
-			emb.showEmbeddedMacros(e.getModifiers());
-
-			oj.OJ.editor.setState(Frame.NORMAL);
-			oj.OJ.editor.toFront();
-		}
-	};
+        public void actionPerformed(ActionEvent e) {
+            EmbeddedMacrosOJ emb = EmbeddedMacrosOJ.getInstance();
+            emb.showEmbeddedMacros(e.getModifiers());
+            
+            oj.OJ.editor.setState(Frame.NORMAL);
+            oj.OJ.editor.toFront();
+        }
+    };
 }

@@ -13,6 +13,7 @@ import oj.OJ;
 import oj.project.CellOJ;
 import oj.project.YtemDefOJ;
 import oj.graphics.CustomCanvasOJ;
+import oj.plugin.GlassWindowOJ;
 import oj.processor.DataProcessorOJ;
 import oj.processor.ToolStateProcessorOJ;
 import oj.processor.events.CellChangedEventOJ;
@@ -44,9 +45,6 @@ public class CreateCellStateOJ extends ToolStateAdaptorOJ implements YtemDefSele
         super.mousePressed(imageName, stackIndex, x, y, flags);
         if ((ytemDefName == null) || (ytemDefName.equals(""))) {
             resetYtemDef();
-            if (OJ.getData().getYtemDefs().getYtemDefsCount() == 0) {
-                IJ.showMessage("No items are defined in:\nObjectJ> Show Project Window> Objects ");
-            }
             if (ytemDefName == null) {
                 return;
             }
@@ -196,21 +194,17 @@ public class CreateCellStateOJ extends ToolStateAdaptorOJ implements YtemDefSele
         xPos = 0;
         yPos = 0;
         CellsOJ cells = OJ.getData().getCells();
-        int openIndex = cells.getOpenCellIndex();
-        //groter rotzooi******
-        if (openIndex >= 0) {
-            cells.setNewestCellIndex(cells.getOpenCellIndex());//16.8.2009
-            if ((imageProxy != null) && (imageProxy.getCellProxy() != null)) {
-                imageProxy.getCellProxy().close();
-            } else {
-                if (OJ.getData().getCells().getOpenCellIndex() >= 0) {
-                    OJ.getData().getCells().getCellByIndex(OJ.getData().getCells().getOpenCellIndex()).setOpen(false);
-                    OJ.getEventProcessor().fireCellChangedEvent(OJ.getData().getCells().getOpenCellIndex(), CellChangedEventOJ.CELL_CLOSE_EVENT);
-                }
+        cells.setNewestCellIndex(cells.getOpenCellIndex());//16.8.2009
+        if ((imageProxy != null) && (imageProxy.getCellProxy() != null)) {
+            imageProxy.getCellProxy().close();
+        } else {
+            if (OJ.getData().getCells().getOpenCellIndex() >= 0) {
+                OJ.getData().getCells().getCellByIndex(OJ.getData().getCells().getOpenCellIndex()).setOpen(false);
+                OJ.getEventProcessor().fireCellChangedEvent(OJ.getData().getCells().getOpenCellIndex(), CellChangedEventOJ.CELL_CLOSE_EVENT);
             }
-            if (OJ.getData().getYtemDefs().isComposite()) {
-                resetYtemDef();
-            }
+        }
+        if (OJ.getData().getYtemDefs().isComposite()) {
+            resetYtemDef();
         }
     }
 
@@ -320,18 +314,18 @@ public class CreateCellStateOJ extends ToolStateAdaptorOJ implements YtemDefSele
     }
 
     private void setCanvasCursor() {
-
+        
         ImageCanvas ic = getCanvas();
         Cursor cursor = null;
         if ((ic != null) && (ic instanceof CustomCanvasOJ)) {
             if (ic instanceof CustomCanvasOJ) {
-                cursor = defaultCursor;
+                cursor=defaultCursor;
             } else {
-                cursor = Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR);
+                cursor=Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR);
             }
         }
-        if (ic != null) {
-            ic.setCursor(cursor);
-        }
+        ic.setCursor(cursor);
+        if (GlassWindowOJ.showing())
+            GlassWindowOJ.getInstance().setCursor(cursor);
     }
 }

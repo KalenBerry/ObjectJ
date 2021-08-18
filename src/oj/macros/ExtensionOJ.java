@@ -1,9 +1,10 @@
 /**
- * ExtensionOJ.java -- documented
+ * ExtensionOJ.java
+ * -- documented
  *
- * general mechanism to handle oj macro functions with different number of
- * arguments
+ * general mechanism to handle oj macor functions with different number of arguments
  */
+
 package oj.macros;
 
 import ij.macro.ExtensionDescriptor;
@@ -15,16 +16,17 @@ import oj.OJ;
 import oj.util.ImageJAccessOJ;
 
 /**
- * We only have 5 static functions called handleMacroExtensions, with 1, 2, 3,
- * 4, 5 string parameters. They are fanned out to >80 calls.
- *
+ * We only have 5 static functions  called handleMacroExtensions,
+ * with 1, 2, 3, 4, 5 string parameters.
+ * They are fanned out to >80 calls.
+ * 
  */
 public class ExtensionOJ implements MacroExtension {
 
     static ExtensionOJ instance = null;
     String[] noProjectNeeded = {"ojRequires", "ojvInitStack", "ojvCalculate", "ojvGetVertexX",
-        "ojvGetVertexY", "ojvGetVertexZ", "ojvPushVertex", "ojvPushRoi", "ojvUndoPush",
-        "ojMatches", "ojvPushPoint", "ojvGetStackSize", "ojPluginTest", "ojCopyFromScreen", "ojTest", "ojLineToPolygon"};
+    "ojvGetVertexY", "ojvGetVertexZ", "ojvPushVertex", "ojvPushRoi",
+    "ojMatches", "ojvPushPoint", "ojvGetStackSize", "ojPluginTest", "ojCopyFromScreen"};
     FunctionsOJ functions = new FunctionsOJ();
 
     /**
@@ -46,7 +48,7 @@ public class ExtensionOJ implements MacroExtension {
         return true;
     }
 
-    /**
+    /** 
      * returns pointer to one of the >60 methods by supplying the name
      */
     private Method validateMethod(String funcName) {
@@ -118,10 +120,6 @@ public class ExtensionOJ implements MacroExtension {
         return ExtensionOJ.getInstance().handleExtension(name, new Object[]{arg1, arg2, arg3, arg4});
     }
 
-    public static String handleMacroExtension(String name, String arg1, String arg2, String arg3, String arg4, String arg5) {
-        return ExtensionOJ.getInstance().handleExtension(name, new Object[]{arg1, arg2, arg3, arg4, arg5});
-    }
-
     boolean needsProject(String name) {
         for (int jj = 0; jj < noProjectNeeded.length; jj++) {
             if (noProjectNeeded[jj].equalsIgnoreCase(name)) {
@@ -163,16 +161,11 @@ public class ExtensionOJ implements MacroExtension {
 
         final Method methods[] = FunctionsOJ.class.getDeclaredMethods();
         for (int i = 0; i < methods.length; ++i) {
-            String name = methods[i].getName();
-            if (name.startsWith("oj")) {
+            if (methods[i].getName().startsWith("oj")) {
                 int argsCount = methods[i].getParameterTypes().length;
                 int[] args = new int[argsCount];
                 for (int j = 0; j < argsCount; j++) {
                     args[j] = MacroExtension.ARG_STRING;
-                    if (name.equals("ojGetPositions")) {
-                        args[0] = MacroExtension.ARG_ARRAY;
-                        args[1] = MacroExtension.ARG_ARRAY;
-                    }
                 }
                 extensions.add(new ExtensionDescriptor(methods[i].getName(), args, this));
             }

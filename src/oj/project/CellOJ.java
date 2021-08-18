@@ -7,9 +7,13 @@
 package oj.project;
 
 import java.awt.Rectangle;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Properties;
+
 import oj.OJ;
 
 public class CellOJ extends BaseAdapterOJ {
@@ -18,10 +22,10 @@ public class CellOJ extends BaseAdapterOJ {
     private String imageName;//owner image
     private int stackIndex;//"home slice", even though in 3D points mey distributed over several slices
     private boolean qualified = true;
-    private ArrayList <YtemOJ> ytemList = new ArrayList();
+    @SuppressWarnings("rawtypes")
+	private ArrayList ytemList = new ArrayList();
     private int cellID = 0;//negative ID that is not affected by removing cells elsewhere
     public Properties properties = new Properties();//hash table results: column name + value (as text)
-	public String info;//6.2.2019
     private transient boolean open;//true while editing, i.e. adding more points or ytems
     private transient boolean selected;//true if cell is selected
     private transient int selectedYtemIndex = 0;
@@ -50,7 +54,7 @@ public class CellOJ extends BaseAdapterOJ {
             return true;
         } else {
             for (int i = 0; i < ytemList.size(); i++) {
-                if (( ytemList.get(i)).getChanged()) {
+                if (((YtemOJ) ytemList.get(i)).getChanged()) {
                     return true;
                 }
             }
@@ -62,7 +66,7 @@ public class CellOJ extends BaseAdapterOJ {
     public void setChanged(boolean changed) {
         super.setChanged(changed);
         for (int i = 0; i < ytemList.size(); i++) {
-            ( ytemList.get(i)).setChanged(changed);
+            ((YtemOJ) ytemList.get(i)).setChanged(changed);
         }
     }
 
@@ -168,7 +172,7 @@ public class CellOJ extends BaseAdapterOJ {
     public Rectangle getRectangle() {
         Rectangle rr = new Rectangle(0, 0, -1, -1);
         for (int i = 0; i < ytemList.size(); i++) {
-            YtemOJ thisYtem =  ytemList.get(i);
+            YtemOJ thisYtem = (YtemOJ) ytemList.get(i);
             rr.add(thisYtem.getRectangle());
         }
         return rr;
@@ -179,12 +183,12 @@ public class CellOJ extends BaseAdapterOJ {
         if (index >= ytemList.size() || index < 0) {//24.4.2009);
             return null;
         }
-        return  ytemList.get(index);
+        return (YtemOJ) ytemList.get(index);
     }
 
     /** @return cell's owner slice, 1-based? */
     public YtemOJ setYtem(int index, YtemOJ ytem) {
-        YtemOJ old_ytem =  ytemList.get(index);
+        YtemOJ old_ytem = (YtemOJ) ytemList.get(index);
         ytemList.set(index, ytem);
         ytem.setParent(this);
         changed = true;
@@ -261,7 +265,7 @@ public class CellOJ extends BaseAdapterOJ {
             }
         }
         for (int i = 0; i < ytemList.size(); i++) {
-            ( ytemList.get(i)).initAfterUnmarshalling(this);
+            ((YtemOJ) ytemList.get(i)).initAfterUnmarshalling(this);
         }
     }
 
@@ -300,7 +304,7 @@ public class CellOJ extends BaseAdapterOJ {
     /** @return index of ytem currently being edited, otherwise -1  (0-based) */
     public int getOpenYtemIndex() {
         for (int i = 0; i < ytemList.size(); i++) {
-            if (( ytemList.get(i)).isOpen()) {
+            if (((YtemOJ) ytemList.get(i)).isOpen()) {
                 return i;
             }
         }
@@ -310,7 +314,7 @@ public class CellOJ extends BaseAdapterOJ {
     /** @return ytem type as integer, e.g. 0 for "Axis", 1 for "Dia" in coli example  */
     public int getOpenYtemDefIndex() {
         for (int i = 0; i < ytemList.size(); i++) {
-            if (( ytemList.get(i)).isOpen()) {
+            if (((YtemOJ) ytemList.get(i)).isOpen()) {
                 String ytemDef = getYtemByIndex(i).getYtemDef();
                 return OJ.getData().getYtemDefs().indexOfYtemDef(ytemDef);
             }
@@ -329,24 +333,12 @@ public class CellOJ extends BaseAdapterOJ {
         changed = true;
 
     }
-	
-	
-	public String getInfo() {//6.2.2019
-		if (info == null) {
-			return "";
-		}
-		return info;
-	}
 
-	public void setInfo(String s) {//6.2.2019
-		info = s;
-	}
-	
     /** @return ytem currently being edited, otherwise null */
     public YtemOJ getOpenYtem() {
         for (int i = 0; i < ytemList.size(); i++) {
-            if (( ytemList.get(i)).isOpen()) {
-                return  ytemList.get(i);
+            if (((YtemOJ) ytemList.get(i)).isOpen()) {
+                return (YtemOJ) ytemList.get(i);
             }
         }
         return null;

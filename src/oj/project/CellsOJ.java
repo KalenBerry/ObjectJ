@@ -7,21 +7,21 @@
 package oj.project;
 
 import ij.IJ;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+
 import oj.OJ;
-import oj.gui.tools.ToolManagerOJ;
 import oj.processor.events.ColumnChangedEventOJ;
 import oj.processor.events.ColumnChangedListenerOJ;
 import oj.processor.events.ImageChangedEventOJ;
 import oj.processor.events.ImageChangedListener2OJ;
 import oj.processor.events.YtemDefChangedEventOJ;
 import oj.processor.events.YtemDefChangedListenerOJ;
-import oj.processor.state.CreateCellStateOJ;
 
 /**
  * collection of all cells
@@ -30,9 +30,9 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
 
     private static final long serialVersionUID = 4163957104769927202L;
     private transient int highestID = 0;//"highest" means "most negative"  cellID
-    private ArrayList<CellOJ> cells = new ArrayList();//array of CellOJs
+    @SuppressWarnings("rawtypes")
+	private ArrayList cells = new ArrayList();//array of CellOJs
     private transient int newestCell = -1;//cell number of last edited cell
-    private transient int newestCellID = 0;//cell ID of last edited cell
 
     public CellsOJ() {
         super();
@@ -43,15 +43,15 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
     }
 
     public void disqualifyAllCells() {
-        for (CellOJ cell : cells) {
-            cell.setQualified(false);
+        for (int i = 0; i < cells.size(); i++) {
+            ((CellOJ) cells.get(i)).setQualified(false);
         }
     }
 
     public void killMarkedCells() {
         for (int index = cells.size() - 1; index >= 0; index--) {
-            //boolean flag = ( cell).getToBeKilled();
-            if ((cells.get(index)).getToBeKilled()) {
+            //boolean flag = ((CellOJ) cell).getToBeKilled();
+            if (((CellOJ) cells.get(index)).getToBeKilled()) {
                 cells.remove(index);
             }
         }
@@ -118,13 +118,13 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
      */
     public void invertCellsQualification() {
         for (int i = 0; i < cells.size(); i++) {
-            (cells.get(i)).setQualified(!(cells.get(i)).isQualified());
+            ((CellOJ) cells.get(i)).setQualified(!((CellOJ) cells.get(i)).isQualified());
         }
     }
 
     public void qualifyAllCells() {
         for (int i = 0; i < cells.size(); i++) {
-            (cells.get(i)).setQualified(true);
+            ((CellOJ) cells.get(i)).setQualified(true);
         }
     }
 
@@ -132,29 +132,14 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
      * index of last edited Cell (0-based)
      */
     public void setNewestCellIndex(int jj) {//16.8.2009
-        
-        CellOJ cell = getCellByIndex(jj);
-        if (cell != null) {//20.9.2015
-            newestCellID = cell.getID();
-            newestCell = jj;
-            return;
-        }
-        newestCellID = 0;
-        newestCell = -1;
+        newestCell = jj;
     }
 
     /**
-     * index of last edited Cell (0-based)
+     * index of last edited Cell  (0-based)
      */
     public int getNewestCellIndex() {//16.8.2009
-        CellOJ cell = getCellByIndex(newestCell);
-        if (cell != null && cell.getID() == newestCellID) {
-            return newestCell;
-        } else {
-            newestCell = -1;
-            newestCellID = 0;
-            return - 1;
-        }
+        return newestCell;
     }
 
     private void writeObject(ObjectOutputStream stream) throws IOException {
@@ -175,7 +160,7 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
             return true;
         } else {
             for (int i = 0; i < cells.size(); i++) {
-                if ((cells.get(i)).getChanged()) {
+                if (((CellOJ) cells.get(i)).getChanged()) {
                     return true;
                 }
             }
@@ -191,7 +176,7 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
     public void setChanged(boolean changed) {
         super.setChanged(changed);
         for (int i = 0; i < cells.size(); i++) {
-            (cells.get(i)).setChanged(changed);
+            ((CellOJ) cells.get(i)).setChanged(changed);
         }
     }
 
@@ -221,7 +206,7 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
     public int getCloneCount(String def) {
         int co = 0;
         for (int i = 0; i < cells.size(); i++) {
-            co += (cells.get(i)).getCloneCount(def);
+            co += ((CellOJ) cells.get(i)).getCloneCount(def);
         }
         return co;
     }
@@ -236,24 +221,62 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
      */
     public Object[] closestPoint(int img, double xx, double yy, int sliceNo/*1-based*/) {
 
+    	
+    	
         ImageOJ imag = OJ.getData().getImages().getImageByIndex(img);
-        int nSlices = imag.getNumberOfSlices() * imag.getNumberOfFrames() * imag.getNumberOfChannels();//27.3.2009
+        int nChannels= imag.getNumberOfChannels();
+        int nSlices = imag.getNumberOfSlices() * imag.getNumberOfFrames() * nChannels;//27.3.2009
+        //subtracting 1 makes the modulus make better coding sense;
+        int chanLoc = (sliceNo-1) % nChannels;
+
+        //KB the new way 
         int low = OJ.getData().getYtemDefs().getVisRangeLow();
         int high = OJ.getData().getYtemDefs().getVisRangeHigh();
+        
+        if (low==0){
+        	low=chanLoc;
+        }
+        if (high==0){
+        	high=nChannels-chanLoc-1;
+        }
+            
+            
+ //KB the old way       
+//        int low = OJ.getData().getYtemDefs().getVisRangeLow();
+//        int high = OJ.getData().getYtemDefs().getVisRangeHigh();
         low = sliceNo - low;
+       
+        high = sliceNo + high;
+      
+        //now make sure this works when showing over multiple slices with modulus
+        int modTest=(low-1)%nChannels;
+        if (modTest != 0) {
+            low = low-modTest;
+        }
+        modTest=(high)%nChannels;//1 based index mod nchannels is 0 when index=nchannels. in zero based it is nchannels-1 at the same position
+        if (modTest != 0) {
+        	modTest=(high-1)%nChannels;
+            high = high+nChannels-modTest-1;
+        }
+        
+        
         if (low < 1) {
             low = 1;
         }
-        high = sliceNo + high;
         if (high >= nSlices) {
             high = nSlices;
         }
-
+        
+        
         int range = high - low + 1;
         int[] sliceSet = new int[range];//so far ,only normal stacks work ( not multichannel display and vis flags)
         for (int jj = 0; jj < range; jj++) {
             sliceSet[jj] = low + jj;//25.3.2009
         }
+
+
+
+
 
         int firstCell = OJ.getData().getImages().getImageByIndex(img).getFirstCell();//-1 if no cells are found
         int lastCell = OJ.getData().getImages().getImageByIndex(img).getLastCell();
@@ -270,22 +293,19 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
                 for (int obj = 0; obj < nObjects; obj++) {
                     YtemOJ thisYtem = thisCell.getYtemByIndex(obj);
                     int nPoints = thisYtem.getLocationsCount();
-
-                    if (OJ.getData().getYtemDefs().getYtemDefByName(thisYtem.getYtemDef()).isVisible()) {//12.4.2015
-                        for (int pp = 0; pp < nPoints; pp++) {
-                            LocationOJ thisLoc = thisYtem.getLocation(pp);
-                            for (int slc = 0; slc < sliceSet.length; slc++) {
-                                if (Math.round(thisLoc.getZ()) == sliceSet[slc]) {
-                                    double dx = thisLoc.getX() - xx;
-                                    double dy = thisLoc.getY() - yy;
-                                    double dist = Math.sqrt(dx * dx + dy * dy);
-                                    if (dist < min && dist < minRad) {
-                                        min = dist;
-                                        closePt[0] = (Object) thisCell;
-                                        closePt[1] = (Object) thisYtem;
-                                        closePt[2] = (Object) thisLoc;
-                                        closePt[3] = (Double) dist;
-                                    }
+                    for (int pp = 0; pp < nPoints; pp++) {
+                        LocationOJ thisLoc = thisYtem.getLocation(pp);
+                        for (int slc = 0; slc < sliceSet.length; slc++) {
+                            if (Math.round(thisLoc.getZ()) == sliceSet[slc]) {
+                                double dx = thisLoc.getX() - xx;
+                                double dy = thisLoc.getY() - yy;
+                                double dist = Math.sqrt(dx * dx + dy * dy);
+                                if (dist < min && dist < minRad) {
+                                    min = dist;
+                                    closePt[0] = (Object) thisCell;
+                                    closePt[1] = (Object) thisYtem;
+                                    closePt[2] = (Object) thisLoc;
+                                    closePt[3] = (Double) dist;
                                 }
                             }
                         }
@@ -297,12 +317,12 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
     }
 
     public void qualifyCell(int index) {
-        (cells.get(index)).setQualified(true);
+        ((CellOJ) cells.get(index)).setQualified(true);
         changed = true;
     }
 
     public void unqualifyCell(int index) {
-        (cells.get(index)).setQualified(false);
+        ((CellOJ) cells.get(index)).setQualified(false);
         changed = true;
     }
 
@@ -370,10 +390,6 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
     }
 
     public boolean addCell(CellOJ cell) {
-        if (cells.size() == 0) {
-            this.highestID = 0;//6.6.2014
-        }
-
         int last_cell_index = getLastCellOnImage(cell.getImageName());
         if (last_cell_index < 0) {
             cells.add(0, cell);
@@ -410,14 +426,14 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
      * returns cell with this index, or null if index out of range
      */
     public CellOJ getCellByIndex(int index) {
-        if (cells == null || index < 0 || index >= cells.size()) {
+        if (cells == null||index < 0 || index >= cells.size()) {
             return null;
         }
-        return cells.get(index);//+++exception ArrayIndexOutOfBoundsException: -1
+        return (CellOJ) cells.get(index);//+++exception ArrayIndexOutOfBoundsException: -1
     }
 
     public CellOJ setCell(int index, CellOJ cell) {
-        CellOJ old_cell = cells.get(index);
+        CellOJ old_cell = (CellOJ) cells.get(index);
         cells.set(index, cell);
         cell.setParent(this);
         changed = true;
@@ -443,24 +459,16 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
 
     public CellOJ[] cellsToArray() {
         CellOJ[] result = new CellOJ[cells.size()];
-		for(int jj = 0; jj < cells.size(); jj++){
-			result[jj] = getCellByIndex(jj);
-			
-		}
-       // System.arraycopy(cells, 0, result, 0, cells.size());
+        System.arraycopy(cells, 0, result, 0, cells.size());
         return result;
     }
 
- public void removeAllCells() {
-		if (OJ.getToolStateProcessor().getToolStateObject() instanceof CreateCellStateOJ) {
-			((CreateCellStateOJ) OJ.getToolStateProcessor().getToolStateObject()).closeCell();
-		}
-		ToolManagerOJ.getInstance().selectTool("");//20.1.2018
-		cells.clear();
-		changed = true;
-		setNewestCellIndex(-1);
+    public void removeAllCells() {
+        cells.clear();
+        changed = true;
+        setNewestCellIndex(-1);
 
-	}
+    }
 
     /**
      * both indexes are inclusive
@@ -475,7 +483,7 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
 
     public int getSelectedCellIndex() {
         for (int i = 0; i < cells.size(); i++) {
-            if ((cells.get(i)).isSelected()) {
+            if (((CellOJ) cells.get(i)).isSelected()) {
                 return i;
             }
         }
@@ -484,8 +492,8 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
 
     public CellOJ getSelectedCell() {
         for (int i = 0; i < cells.size(); i++) {
-            if ((cells.get(i)).isSelected()) {
-                return cells.get(i);
+            if (((CellOJ) cells.get(i)).isSelected()) {
+                return (CellOJ) cells.get(i);
             }
         }
         return null;
@@ -493,13 +501,13 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
 
     public void selectCell(int index) {
         for (int i = 0; i < cells.size(); i++) {
-            (cells.get(i)).setSelected(i == index);
+            ((CellOJ) cells.get(i)).setSelected(i == index);
         }
     }
 
     public int getOpenCellIndex() {
         for (int i = 0; i < cells.size(); i++) {
-            if ((cells.get(i)).isOpen()) {
+            if (((CellOJ) cells.get(i)).isOpen()) {
                 return i;
             }
         }
@@ -512,9 +520,12 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
      */
     public int getFirstCellOnImage(String imageName) {
         boolean found = false;
-        int firstCell = cells.size() - 1;
-        for (int i = 0; i < cells.size(); i++) {
-            String image_name = (cells.get(i)).getImageName();
+        int cSize = cells.size();
+        int firstCell=cSize-1;
+        for (int i = 0; i < cSize; i++) {
+        	if(i==cSize)
+                break; //KB 2-6-15 kept getting out of bounds errors somethign funky can happen here. where the index was going higher than it should. this should stop it.  
+            String image_name = ((CellOJ) cells.get(i)).getImageName();
             if ((image_name.equals(imageName)) && (i <= firstCell)) {
                 firstCell = i;
                 found = true;
@@ -528,8 +539,11 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
 
     public int getLastCellOnImage(String imageName) {
         int lastCell = -1;
-        for (int i = 0; i < cells.size(); i++) {
-            String image_name = (cells.get(i)).getImageName();
+        int cSize=cells.size();
+        for (int i = 0; i < cSize; i++) {
+        	if(i==cSize)
+                break; //KB 2-6-15 kept getting out of bounds errors somethign funky can happen here. where the index was going higher than it should. this should stop it.  
+            String image_name = ((CellOJ) cells.get(i)).getImageName();
             if ((image_name.equals(imageName)) && (i > lastCell)) {
                 lastCell = i;
             }
@@ -540,7 +554,7 @@ public class CellsOJ extends BaseAdapterOJ implements ImageChangedListener2OJ, C
     public int getLastSliceInImage(String imageName) {
         int lastSlice = -1;
         for (int i = 0; i < cells.size(); i++) {
-            CellOJ cell = cells.get(i);
+            CellOJ cell = (CellOJ) cells.get(i);
             String image_name = cell.getImageName();
             if ((image_name.equals(imageName)) && (cell.getStackIndex() > lastSlice)) {
                 lastSlice = cell.getStackIndex();

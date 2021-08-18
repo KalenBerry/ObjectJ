@@ -81,7 +81,7 @@ public class LinkedStatRowsModelOJ extends AbstractTableModel {
                             int digits = column.getColumnDef().getColumnDigits();
                             double value = column.getStatistics().getStatisticsValueByName(statOperation);
 
-                            if (("StDev".equals(statOperation)||"Mean".equals(statOperation)) && (digits < 2)) {
+                            if ("StDev".equals(statOperation) & (digits < 2)) {
                                 return UtilsOJ.doubleToString(value, 2);//at least 2
                             } else if ("Count".equals(statOperation)) {
                                 return UtilsOJ.doubleToString(value, 0);//always integer
@@ -112,7 +112,7 @@ public class LinkedStatRowsModelOJ extends AbstractTableModel {
         int count = 0;
         ColumnsOJ columns = OJ.getData().getResults().getColumns();
         for (int i = 0; i < columns.getAllColumnsCount(); i++) {
-            if (true) {
+            if (!((ColumnOJ) columns.getColumnByIndex(i)).isUnlinkedColumn()) {
                 if (!((ColumnOJ) columns.getColumnByIndex(i)).getColumnDef().isHidden()) {
                     count = count + 1;
                 }
@@ -131,7 +131,7 @@ public class LinkedStatRowsModelOJ extends AbstractTableModel {
         int count = -1;
         ColumnsOJ columns = OJ.getData().getResults().getColumns();
         for (int i = 0; i < columns.getAllColumnsCount(); i++) {
-            if (true) {
+            if (!((ColumnOJ) columns.getColumnByIndex(i)).isUnlinkedColumn()) {
                 if (!((ColumnOJ) columns.getColumnByIndex(i)).getColumnDef().isHidden()) {
                     count = count + 1;
                     if (count == index) {

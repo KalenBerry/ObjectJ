@@ -60,12 +60,14 @@ public class MoveCellStateOJ extends ToolStateAdaptorOJ {
         setCanvasCursor();
     }
 
-    public void mouseDragged(String imageName, int stackIndex, double x, double y, int flags) {
+    public void mouseDragged(String imageName, int stackIndex, double x, double y, int flags) { // TODO: where the dragging in Z will happen yo
         super.mouseDragged(imageName, stackIndex, x, y, flags);
+        //if ((this.imageName != null) && (this.imageName.equals(imageName))) {
         if ((this.imageName != null) && (this.imageName.equals(imageName)) && (this.stackIndex == stackIndex)) {
             if (location != null) {
                 double dx = x - location.getX();
                 double dy = y - location.getY();
+                double dz = (double)getCanvas().getImage().getCurrentSlice() - location.getZ();
                 updateState(flags);
                 switch (stateMode) {
                     case YTEM:
@@ -74,6 +76,7 @@ public class MoveCellStateOJ extends ToolStateAdaptorOJ {
                             LocationOJ loc = ytem.getLocation(j);
                             loc.setX(loc.getX() + dx);
                             loc.setY(loc.getY() + dy);
+                            loc.setZ(loc.getZ() + dz); // TODO Z-stuff
                             OJ.getDataProcessor().setLocation(ytem, j, loc);
                         }
 
@@ -81,6 +84,7 @@ public class MoveCellStateOJ extends ToolStateAdaptorOJ {
                     case POINT:
                         location.setX(x);
                         location.setY(y);
+                        location.setZ((double)getCanvas().getImage().getCurrentSlice()); // TODO Z-stuff
                         OJ.getDataProcessor().setLocation(ytem, locationIndex, location);
                         break;
                     default:
@@ -93,6 +97,7 @@ public class MoveCellStateOJ extends ToolStateAdaptorOJ {
                                 LocationOJ loc = ytm.getLocation(j);
                                 loc.setX(loc.getX() + dx);
                                 loc.setY(loc.getY() + dy);
+                                loc.setZ(loc.getZ() + dz); // TODO Z-stuff
                                 OJ.getDataProcessor().setLocation(ytm, j, loc);
                             }
 
@@ -105,10 +110,12 @@ public class MoveCellStateOJ extends ToolStateAdaptorOJ {
 
     public void mouseReleased(String imageName, int stackIndex, double x, double y, int flags) {
         super.mouseReleased(imageName, stackIndex, x, y, flags);
-        if ((this.imageName != null) && (this.imageName.equals(imageName)) && (this.stackIndex == stackIndex)) {
+        if ((this.imageName != null) && (this.imageName.equals(imageName))) {
+        //if ((this.imageName != null) && (this.imageName.equals(imageName)) && (this.stackIndex == stackIndex)) {
             if (location != null) {
                 double dx = x - location.getX();
                 double dy = y - location.getY();
+                double dz = (double)getCanvas().getImage().getCurrentSlice() - location.getZ();
                 updateState(flags);//30.9.2009
 
                 switch (stateMode) {
@@ -118,6 +125,7 @@ public class MoveCellStateOJ extends ToolStateAdaptorOJ {
                             LocationOJ loc = ytem.getLocation(j);
                             loc.setX(loc.getX() + dx);
                             loc.setY(loc.getY() + dy);
+                            loc.setZ(loc.getZ() + dz);
                             OJ.getDataProcessor().setLocation(ytem, j, loc);
                         }
 
@@ -125,6 +133,7 @@ public class MoveCellStateOJ extends ToolStateAdaptorOJ {
                     case POINT:
                         location.setX(x);
                         location.setY(y);
+                        location.setZ((double)getCanvas().getImage().getCurrentSlice());
                         OJ.getDataProcessor().setLocation(ytem, locationIndex, location);
                         break;
                     default:
@@ -137,6 +146,7 @@ public class MoveCellStateOJ extends ToolStateAdaptorOJ {
                                 LocationOJ loc = ytm.getLocation(j);
                                 loc.setX(loc.getX() + dx);
                                 loc.setY(loc.getY() + dy);
+                                loc.setZ(loc.getZ() + dz);
                                 OJ.getDataProcessor().setLocation(ytm, j, loc);
                             }
 

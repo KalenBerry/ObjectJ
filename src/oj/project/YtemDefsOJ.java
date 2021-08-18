@@ -18,14 +18,12 @@ public class YtemDefsOJ extends BaseAdapterOJ {
     private boolean showcellnumber;// visibility of number label
     private transient int visRangeLow;// >0 if visible in neighbor slices
     private transient int visRangeHigh;//>0 if visible in neighbor slices
-    private ArrayList<YtemDefOJ> ytemDefList = new ArrayList();//contains YtemDefs
+    private ArrayList ytemDefList = new ArrayList();//contains YtemDefs
     private transient boolean cellLayerVisible = true;//show or hide markers 13.4.
     private transient String selectedYtemDefName = "";//
     private transient boolean ytemVisibilitySwitchEnabled = false;//maste switch to show/hide individual ytem types
 
-    /**
-     * Creates a new instance of YtemDefsOJ
-     */
+    /** Creates a new instance of YtemDefsOJ */
     public YtemDefsOJ() {
         this.multicollect = true;
         this.threedytems = false;
@@ -34,38 +32,30 @@ public class YtemDefsOJ extends BaseAdapterOJ {
         this.visRangeLow = 0;
     }
 
-    /**
-     * >0 if visible in neighbor slices
-     */
+    /** >0 if visible in neighbor slices */
     public int getVisRangeLow() {
         return visRangeLow;
     }
 
-    /**
-     * >0 if visible in neighbor slices
-     */
+    /** >0 if visible in neighbor slices */
     public int getVisRangeHigh() {
         return visRangeHigh;
     }
 
-    /**
-     * >0 if visible in neighbor slices
-     */
+    /** >0 if visible in neighbor slices */
     public void setVisRange(int low, int high) {
         visRangeLow = low;
         visRangeHigh = high;
 
     }
 
-    /**
-     * @return true if list or one of the components has changed
-     */
+    /** @return true if list or one of the components has changed */
     public boolean getChanged() {
         if (super.getChanged()) {
             return true;
         } else {
             for (int i = 0; i < ytemDefList.size(); i++) {
-                if ((ytemDefList.get(i)).getChanged()) {
+                if (((YtemDefOJ) ytemDefList.get(i)).getChanged()) {
                     return true;
                 }
             }
@@ -92,19 +82,15 @@ public class YtemDefsOJ extends BaseAdapterOJ {
         OJ.getEventProcessor().fireYtemDefSelectionChangedEvent(ytemDefName);
     }
 
-    /**
-     * propagates 'changed' flag
-     */
+    /** propagates 'changed' flag */
     public void setChanged(boolean changed) {
         super.setChanged(changed);
         for (int i = 0; i < ytemDefList.size(); i++) {
-            (ytemDefList.get(i)).setChanged(changed);
+            ((YtemDefOJ) ytemDefList.get(i)).setChanged(changed);
         }
     }
 
-    /**
-     * clears the list and sets parameters to default
-     */
+    /** clears the list and sets parameters to default */
     public void clear() {
         multicollect = true;
         threedytems = false;
@@ -113,16 +99,12 @@ public class YtemDefsOJ extends BaseAdapterOJ {
         changed = true;
     }
 
-    /**
-     * @return number of defined ytems
-     */
+    /** @return number of defined ytems */
     public int getYtemDefsCount() {
         return ytemDefList.size();
     }
 
-    /**
-     * append an ytem type to the end of the ytemDefs list
-     */
+    /** append an ytem type  to the end of the ytemDefs list */
     public boolean addYtemDef(YtemDefOJ ytemDef) {
         if (ytemDefList.add(ytemDef)) {
             ytemDef.setParent(this);
@@ -134,7 +116,7 @@ public class YtemDefsOJ extends BaseAdapterOJ {
     }
 
     public YtemDefOJ getYtemDefByIndex(int index) {
-        return ytemDefList.get(index);
+        return (YtemDefOJ) ytemDefList.get(index);
     }
 
     public int getYtemDefIndexByName(String name) {
@@ -157,30 +139,22 @@ public class YtemDefsOJ extends BaseAdapterOJ {
         return null;
     }
 
-    /**
-     * replace old ytemDef by new one, and set new ytemDef's parent.
-     *
-     * @return old ytemDef
-     */
+    /** replace old ytemDef by new one, and set new ytemDef's parent.
+     * @return old ytemDef  */
     public YtemDefOJ setYtemDef(int index, YtemDefOJ newYtemDef) {
-        YtemDefOJ old_ytemDef = ytemDefList.get(index);
+        YtemDefOJ old_ytemDef = (YtemDefOJ) ytemDefList.get(index);
         ytemDefList.set(index, newYtemDef);
         newYtemDef.setParent(this);
         changed = true;
         return old_ytemDef;
     }
 
-    /**
-     * @return index ytemDef
-     */
+    /** @return index ytemDef  */
     public int indexOfYtemDef(YtemDefOJ ytemDef) {
         return ytemDefList.indexOf(ytemDef);
     }
 
-    /**
-     * @return index ytemDef with this name, or -1 if not found - not case
-     * sensitive
-     */
+    /** @return index ytemDef with this  name, or -1 if not found - not case sensitive  */
     public int indexOfYtemDef(String name) {
         for (int i = 0; i < ytemDefList.size(); i++) {
             if (getYtemDefByIndex(i).getYtemDefName().equalsIgnoreCase(name)) {
@@ -191,9 +165,7 @@ public class YtemDefsOJ extends BaseAdapterOJ {
         return -1;
     }
 
-    /**
-     * delete n-th ytem definition, 0-based
-     */
+    /** delete n-th ytem definition, 0-based*/
     public void removeYtemDefByIndex(int index) {
         String name = getYtemDefByIndex(index).getYtemDefName();
         ytemDefList.remove(index);
@@ -201,57 +173,45 @@ public class YtemDefsOJ extends BaseAdapterOJ {
         OJ.getEventProcessor().fireYtemDefChangedEvent(name, YtemDefChangedEventOJ.YTEMDEF_DELETED);
     }
 
-    /**
-     * delete ytem definition with this name
-     */
+    /** delete ytem definition with this name */
     public void removeYtemDefByName(String name) {
         ytemDefList.remove(indexOfYtemDef(name));
         changed = true;
         OJ.getEventProcessor().fireYtemDefChangedEvent(name, YtemDefChangedEventOJ.YTEMDEF_DELETED);
     }
 
-    /**
-     * remove this ytem definition from the list
-     */
+    /** remove this ytem definition from the list */
     public void removeYtemDef(YtemDefOJ ytemDef) {
         ytemDefList.remove(ytemDef);
         changed = true;
         OJ.getEventProcessor().fireYtemDefChangedEvent(ytemDef.getYtemDefName(), YtemDefChangedEventOJ.YTEMDEF_DELETED);
     }
 
-    /**
-     * @return ArrayList as Array of YtemDefs
-     */
+    /** @return ArrayList as Array of YtemDefs */
     public YtemDefOJ[] ytemDefsToArray() {
         YtemDefOJ[] result = new YtemDefOJ[ytemDefList.size()];
         System.arraycopy(ytemDefList, 0, result, 0, ytemDefList.size());
         return result;
     }
 
-    /**
-     * @return ArrayList as Array of names
-     */
+    /** @return ArrayList as Array of names */
     public String[] ytemDefNamesToArray() {
         String[] result = new String[ytemDefList.size()];
         for (int i = 0; i < ytemDefList.size(); i++) {
-            result[i] = (ytemDefList.get(i)).getYtemDefName();
+            result[i] = ((YtemDefOJ) ytemDefList.get(i)).getYtemDefName();
         }
         return result;
     }
 
-    /**
-     * put n-th ytemDef to a different position in the list, 0-based
-     */
+    /** put n-th ytemDef to a different position in the list, 0-based */
     public void exchangeYtemDefPosition(int from, int to) {
-        YtemDefOJ tmp = ytemDefList.get(from);
+        Object tmp = ytemDefList.get(from);
         ytemDefList.set(from, ytemDefList.get(to));
         ytemDefList.set(to, tmp);
         changed = true;
     }
 
-    /**
-     * set the "composite objects" flag
-     */
+    /** set the "composite objects" flag */
     public void setComposite(boolean enabled) {
         this.multicollect = enabled;
         changed = true;
@@ -261,73 +221,55 @@ public class YtemDefsOJ extends BaseAdapterOJ {
         return multicollect;
     }
 
-    /**
-     * @return the "composite objects" flag
-     */
+    /** @return the "composite objects" flag */
     public void set3DYtems(boolean enabled) {
         this.threedytems = enabled;
         changed = true;
     }
 
-    /**
-     * @return the "3D" flag
-     */
+    /** @return the "3D" flag */
     public boolean is3DYtems() {
         return threedytems;
     }
 
-    /**
-     * set the "composite objects" flag
-     */
+    /** set the "composite objects" flag */
     public void setShowCellNumber(boolean enabled) {
         this.showcellnumber = enabled;
         changed = true;
     }
 
-    /**
-     * @return the "Show Object Label" flag
-     */
+    /** @return the "Show Object Label" flag */
     public boolean getShowCellNumber() {
         return showcellnumber;
     }
 
-    /**
-     * Initialize and propagate
-     */
+    /** Initialize and propagate */
     public void initAfterUnmarshalling(IBaseOJ parent) {
         super.initAfterUnmarshalling(parent);
         if (ytemDefList == null) {
             ytemDefList = new ArrayList();
         }
         for (int i = 0; i < ytemDefList.size(); i++) {
-            (ytemDefList.get(i)).initAfterUnmarshalling(this);
+            ((YtemDefOJ) ytemDefList.get(i)).initAfterUnmarshalling(this);
         }
     }
 
-    /**
-     * @return status of ytem visibility master switch
-     */
+    /** @return  status of ytem visibility master switch */
     public boolean isYtemVisibilitySwitchEnabled() {
         return ytemVisibilitySwitchEnabled;
     }
 
-    /**
-     * set status of ytem visibility master switch
-     */
+    /** set status of ytem visibility master switch */
     public void setYtemVisibilitySwitchEnabled(boolean visibilitySwitchEnabled) {
         this.ytemVisibilitySwitchEnabled = visibilitySwitchEnabled;
     }
 
-    /**
-     * @return status of object visibility
-     */
+    /** @return status of object visibility */
     public boolean isCellLayerVisible() {
         return cellLayerVisible;
     }
 
-    /**
-     * set status of object visibility
-     */
+    /** set status of  object visibility */
     public void setCellLayerVisible(boolean cellLayerVisible) {
         this.cellLayerVisible = cellLayerVisible;
     }

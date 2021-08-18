@@ -28,7 +28,7 @@ public class ColumnListRendererOJ extends JCheckBox implements ListCellRenderer 
             boolean isSelected, // is the cell selected
             boolean cellHasFocus) {
 
-        //int tab =ProjectResultsOJ.getInstance().getTab();
+        int tab =ProjectResultsOJ.getInstance().getTab();
         if (value == null) {
             setSelected(false);
             setEnabled(false);
@@ -38,7 +38,8 @@ public class ColumnListRendererOJ extends JCheckBox implements ListCellRenderer 
             setText(((ColumnOJ) value).getName());
             setEnabled(list.isEnabled());
             ColumnsOJ columns = oj.OJ.getData().getResults().getColumns();
-            int lastLinked = columns.getAllColumnsCount();
+            int lastLinked = columns.getAllColumnsCount() - columns.getUnlinkedColumnsCount();
+            int jj = oj.OJ.getData().getResults().getColumns().getUnlinkedColumnsCount();
             if (index >= lastLinked) {
                 setBackground(new Color(236, 236, 188));
             } else {

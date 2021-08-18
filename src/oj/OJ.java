@@ -3,11 +3,14 @@ package oj;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.Menus;
+import ij.Prefs;
 import ij.plugin.frame.Editor;
+
 import java.awt.Color;
 import java.awt.Window;
-import java.util.Hashtable;
+
 import javax.swing.ToolTipManager;
+
 import oj.project.DataOJ;
 import oj.geometry.VertexCalculatorOJ;
 import oj.gui.MenuManagerOJ;
@@ -32,7 +35,8 @@ import oj.gui.tools.ToolManagerOJ;
  */
 public class OJ {
 
-     private static DataOJ doj;
+    //public static boolean ojIsInstalled = false;//14.9.2010
+    private static DataOJ doj;
     private static ToolStateProcessorOJ ccj;
     private static DataProcessorOJ poj;
     private static EventProcessorOJ evp;
@@ -42,22 +46,20 @@ public class OJ {
     private static VertexCalculatorOJ vcj;
     private static IjImageChangedListenerOJ ilj;
     private static StackChangedListenerOJ slj;
-    public final static int build = 603;
-    public final static String releaseVersion = "1.05j4";//follow Wayne's numbering
-    public final static String buildDate = "24-jul-2021";
-    public static final String URL = "https://sils.fnwi.uva.nl/bcb/objectj";
-    public static final String URLcurrent = URL + "/download/current/";
+    public final static int build = 38;
+    public final static String releaseVersion = "1.03b";//
+    public final static String buildDate = "2-sep-2013 13:00";
+    public static final String URL = "http://simon.bio.uva.nl/objectj";
     public static final String ICONS = "/oj/gui/icons/";
-    public static int bufferStrategy = 2;
+    public static int bufferStrategy = 2;//10.7.2009
     public static boolean loadedAsBinary = true;
     public static boolean saveAsBinary = true;
-    public static boolean useProjectMenu = true;
-    public static boolean addMagicBytes = true;
+    public static boolean useProjectMenu = true;//13.4.2010
+    public static boolean addMagicBytes = true;//23.4.2010
     public static Editor editor = null;//
-    public static Editor plotEditor = null;
-    public static Window editorWindow = null;
-    public static Color headerBackground = new Color(80, 80, 80);
-    public static boolean isProjectOpen = false;
+    public static Window editorWindow = null;//23.4.2010
+    public static Color headerBackground = new Color(80, 80, 80);//17.5.2010
+    public static boolean isProjectOpen = false;//17.5.2010
     public static boolean doubleBuffered = true;// for Windows only 10.2.2011
 
     /**
@@ -69,6 +71,23 @@ public class OJ {
         if (!IJ.isMacintosh()) {
             IJ.getInstance().setSize(IJ.getInstance().getWidth() + 48, IJ.getInstance().getHeight());//1.12.2008
         }
+        
+        //KB Make sure Preferences are set before things go too far
+        
+     
+        if(Prefs.get("marker.Size", 0)==0){
+        	
+        	Prefs.set("marker.Size", 16);
+        	Prefs.set("marker.Multiplier", 1.5);
+        	Prefs.set("font.Size", "16");
+        	Prefs.set("marker.channelMustBeActive",1);
+        	Prefs.savePreferences();
+        	
+        }
+     
+       
+        
+        
         //ojIsInstalled = true;
         evp = new EventProcessorOJ();
         poj = new DataProcessorOJ();
@@ -82,6 +101,12 @@ public class OJ {
         ilj = new IjImageChangedListenerOJ();
         slj = new StackChangedListenerOJ();
         //imageManagerOJ = new ImageManagerOJ();
+        
+        
+        
+        
+        
+        
         new MenuManagerOJ(Menus.getMenuBar());
 
         ImagePlus.addImageListener(ilj);
@@ -105,8 +130,6 @@ public class OJ {
     public static void installPlugins() {
 
         //Menus.getCommands().put("Scale...", "oj.plugin.ScalerOJ");--21.8.2009
-		Hashtable commands = Menus.getCommands();
-		
         Menus.getCommands().put("Set Scale...", "oj.plugin.ScaleDialogOJ");
         Menus.getCommands().put("Quit", "oj.plugin.QuitOJ");
         //Menus.getCommands().put("Open...", "oj.plugin.OpenFileOJ"); removed 24.5.2010
@@ -115,10 +138,9 @@ public class OJ {
         Menus.getCommands().put("Delete Slice", "oj.plugin.StackEditorOJ(\"delete\")");
         Menus.getCommands().put("Convert Images to Stack", "oj.plugin.StackEditorOJ(\"tostack\")");
         Menus.getCommands().put("Convert Stack to Images", "oj.plugin.StackEditorOJ(\"toimages\")");
-        Menus.getCommands().put("Rename...", "oj.plugin.SimpleCommandsOJ(\"rename\")");
 
-        //Menus.getCommands().put("Update ImageJ...", "oj.plugin.ImageJUpdaterOJ"); //11.6.2015
-        //Menus.getCommands().put("Update Menus", "oj.plugin.ImageJUpdaterOJ(\"menus\")");
+        Menus.getCommands().put("Update ImageJ...", "oj.plugin.ImageJUpdaterOJ");
+        Menus.getCommands().put("Update Menus", "oj.plugin.ImageJUpdaterOJ(\"menus\")");
         Menus.getCommands().put("Refresh Menus", "oj.plugin.ImageJUpdaterOJ(\"menus\")");
 
         Menus.getCommands().put("Tiff...", "oj.plugin.WriterOJ(\"tiff\")");
@@ -227,6 +249,7 @@ public class OJ {
             bufferStrategy = n;
         } else {
             IJ.showMessage("buffer strategy must be 1 .. 3");
+
         }
     }
 
@@ -235,4 +258,9 @@ public class OJ {
             IJ.log(msg);
         }
     }
+    
+    
+
+    
+    
 }

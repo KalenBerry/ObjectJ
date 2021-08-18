@@ -9,14 +9,11 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
-import java.awt.dnd.DropTarget;
-import java.io.File;
 import java.util.Hashtable;
 import javax.swing.JLabel;
 import javax.swing.border.Border;
 import oj.OJ;
 import oj.gui.KeyEventManagerOJ;
-import oj.processor.ImageProcessorOJ;
 
 /**
  * Project window with the five icons
@@ -45,11 +42,8 @@ public class ProjectSettingsOJ extends javax.swing.JFrame {
         initComponents();
         initComponentsExt();
         lblImageDefsMousePressed(null);
-        File file2 = new File(OJ.getData().getDirectory(), OJ.getData().getFilename());
-        getRootPane().putClientProperty("Window.documentFile", file2);//setTitleBarProxy
-        getRootPane().putClientProperty("Window.documentModified", false);
     }
-            
+
     /**
      * returns corresponding panel, e.g. Images Panel when supplying "images"
      */
@@ -87,21 +81,16 @@ public class ProjectSettingsOJ extends javax.swing.JFrame {
         settingsPanels.put(ProjectSettingsOJ.QUALIFIERS_PANEL, new QualifiersSettingsOJ());
         settingsPanels.put(ProjectSettingsOJ.YTEM_DEFS_PANEL, new YtemDefsSettingsOJ());
         settingsPanels.put(ProjectSettingsOJ.IMAGE_DEFS_PANEL, new ImageDefsSettingsOJ());
-//        if (PlotManagerOJ.withPlots) {
-//            settingsPanels.put(ProjectSettingsOJ.PLOTS_PANEL, new PlotManagerOJ());
-//        }
+        if (PlotSettingsOJ.withPlots) {
+            settingsPanels.put(ProjectSettingsOJ.PLOTS_PANEL, new PlotSettingsOJ());
+        }
         pnlSettings.add((javax.swing.JPanel) settingsPanels.get(ProjectSettingsOJ.COLUMNS_PANEL), ProjectSettingsOJ.COLUMNS_PANEL);
         pnlSettings.add((javax.swing.JPanel) settingsPanels.get(ProjectSettingsOJ.QUALIFIERS_PANEL), ProjectSettingsOJ.QUALIFIERS_PANEL);
         pnlSettings.add((javax.swing.JPanel) settingsPanels.get(ProjectSettingsOJ.YTEM_DEFS_PANEL), ProjectSettingsOJ.YTEM_DEFS_PANEL);
         pnlSettings.add((javax.swing.JPanel) settingsPanels.get(ProjectSettingsOJ.IMAGE_DEFS_PANEL), ProjectSettingsOJ.IMAGE_DEFS_PANEL);
-        
-        new DropTarget(lblImageDefs, ImageProcessorOJ.dropOperations, OJ.getImageProcessor());//18.11.2014
 
-//        if (PlotManagerOJ.withPlots) {
-//            pnlSettings.add((javax.swing.JPanel) settingsPanels.get(ProjectSettingsOJ.PLOTS_PANEL), ProjectSettingsOJ.PLOTS_PANEL);
-//        }
-        if (IJ.isWindows()) {
-            btnShowInFinder.setText("Show in Explorer");
+        if (PlotSettingsOJ.withPlots) {
+            pnlSettings.add((javax.swing.JPanel) settingsPanels.get(ProjectSettingsOJ.PLOTS_PANEL), ProjectSettingsOJ.PLOTS_PANEL);
         }
     }
 
@@ -130,13 +119,13 @@ public class ProjectSettingsOJ extends javax.swing.JFrame {
             lblResults.setBorder(unselectedBorder);
             lblResults.setBackground(Color.WHITE);
         }
-//        if (selectedLabel != lblPlots) {
-//            lblPlots.setBorder(unselectedBorder);
-//            lblPlots.setBackground(Color.WHITE);
-//        }
-//        if (!PlotManagerOJ.withPlots && lblPlots != null) {
-//            lblPlots.hide();
-//        }
+        if (selectedLabel != lblPlots) {
+            lblPlots.setBorder(unselectedBorder);
+            lblPlots.setBackground(Color.WHITE);
+        }
+        if (!PlotSettingsOJ.withPlots && lblPlots != null) {
+            lblPlots.hide();
+        }
     }
 
     /**
@@ -166,19 +155,16 @@ public class ProjectSettingsOJ extends javax.swing.JFrame {
         lblYtemDefs = new javax.swing.JLabel();
         lblResults = new javax.swing.JLabel();
         lblQualifiers = new javax.swing.JLabel();
-        filler2 = new javax.swing.Box.Filler(new java.awt.Dimension(10, 88), new java.awt.Dimension(20, 88), new java.awt.Dimension(20, 88));
-        jPanel2 = new javax.swing.JPanel();
-        btnObjectJResults = new javax.swing.JButton();
-        filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 10), new java.awt.Dimension(0, 6), new java.awt.Dimension(0, 10));
-        btnShowInFinder = new javax.swing.JButton();
-        filler3 = new javax.swing.Box.Filler(new java.awt.Dimension(0, 0), new java.awt.Dimension(0, 12), new java.awt.Dimension(0, 32767));
+        lblPlots = new javax.swing.JLabel();
         pnlMain = new javax.swing.JPanel();
         pnlSettings = new javax.swing.JPanel();
 
         setTitle("ObjectJ Settings");
-        setBounds(new java.awt.Rectangle(0, 22, 580, 416));
-        setMinimumSize(new java.awt.Dimension(400, 300));
-        setPreferredSize(new java.awt.Dimension(580, 416));
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentResized(java.awt.event.ComponentEvent evt) {
+                formComponentResized(evt);
+            }
+        });
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowOpened(java.awt.event.WindowEvent evt) {
                 formWindowOpened(evt);
@@ -193,14 +179,9 @@ public class ProjectSettingsOJ extends javax.swing.JFrame {
                 formWindowActivated(evt);
             }
         });
-        addComponentListener(new java.awt.event.ComponentAdapter() {
-            public void componentResized(java.awt.event.ComponentEvent evt) {
-                formComponentResized(evt);
-            }
-        });
 
         pnlHeader.setBackground(new java.awt.Color(255, 255, 255));
-        pnlHeader.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
+        pnlHeader.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 204, 204)));
         pnlHeader.setMaximumSize(new java.awt.Dimension(2147483647, 74));
         pnlHeader.setMinimumSize(new java.awt.Dimension(412, 74));
         pnlHeader.setPreferredSize(new java.awt.Dimension(412, 74));
@@ -212,10 +193,7 @@ public class ProjectSettingsOJ extends javax.swing.JFrame {
         lblImageDefs.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
         lblImageDefs.setDoubleBuffered(true);
         lblImageDefs.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        lblImageDefs.setMaximumSize(new java.awt.Dimension(84, 88));
-        lblImageDefs.setMinimumSize(new java.awt.Dimension(72, 88));
         lblImageDefs.setOpaque(true);
-        lblImageDefs.setPreferredSize(new java.awt.Dimension(76, 88));
         lblImageDefs.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         lblImageDefs.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mousePressed(java.awt.event.MouseEvent evt) {
@@ -230,10 +208,10 @@ public class ProjectSettingsOJ extends javax.swing.JFrame {
         lblYtemDefs.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
         lblYtemDefs.setDoubleBuffered(true);
         lblYtemDefs.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        lblYtemDefs.setMaximumSize(new java.awt.Dimension(84, 88));
-        lblYtemDefs.setMinimumSize(new java.awt.Dimension(72, 88));
+        lblYtemDefs.setMaximumSize(new java.awt.Dimension(70, 88));
+        lblYtemDefs.setMinimumSize(new java.awt.Dimension(70, 88));
         lblYtemDefs.setOpaque(true);
-        lblYtemDefs.setPreferredSize(new java.awt.Dimension(76, 88));
+        lblYtemDefs.setPreferredSize(new java.awt.Dimension(68, 88));
         lblYtemDefs.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         lblYtemDefs.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mousePressed(java.awt.event.MouseEvent evt) {
@@ -247,11 +225,7 @@ public class ProjectSettingsOJ extends javax.swing.JFrame {
         lblResults.setText("Columns");
         lblResults.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
         lblResults.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        lblResults.setMaximumSize(new java.awt.Dimension(84, 88));
-        lblResults.setMinimumSize(new java.awt.Dimension(72, 88));
         lblResults.setOpaque(true);
-        lblResults.setPreferredSize(new java.awt.Dimension(80, 88));
-        lblResults.setRequestFocusEnabled(false);
         lblResults.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         lblResults.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mousePressed(java.awt.event.MouseEvent evt) {
@@ -265,10 +239,7 @@ public class ProjectSettingsOJ extends javax.swing.JFrame {
         lblQualifiers.setText("Qualifiers");
         lblQualifiers.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
         lblQualifiers.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        lblQualifiers.setMaximumSize(new java.awt.Dimension(84, 88));
-        lblQualifiers.setMinimumSize(new java.awt.Dimension(72, 88));
         lblQualifiers.setOpaque(true);
-        lblQualifiers.setPreferredSize(new java.awt.Dimension(84, 88));
         lblQualifiers.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         lblQualifiers.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mousePressed(java.awt.event.MouseEvent evt) {
@@ -276,39 +247,20 @@ public class ProjectSettingsOJ extends javax.swing.JFrame {
             }
         });
         pnlHeader.add(lblQualifiers);
-        pnlHeader.add(filler2);
 
-        jPanel2.setBackground(new java.awt.Color(255, 255, 255));
-        jPanel2.setMaximumSize(new java.awt.Dimension(400, 88));
-        jPanel2.setMinimumSize(new java.awt.Dimension(100, 88));
-        jPanel2.setPreferredSize(new java.awt.Dimension(100, 88));
-        jPanel2.setLayout(new javax.swing.BoxLayout(jPanel2, javax.swing.BoxLayout.Y_AXIS));
-
-        btnObjectJResults.setFont(new java.awt.Font("Lucida Grande", 0, 10)); // NOI18N
-        btnObjectJResults.setText("ObjectJ Results");
-        btnObjectJResults.setMaximumSize(new java.awt.Dimension(118, 24));
-        btnObjectJResults.setMinimumSize(new java.awt.Dimension(118, 24));
-        btnObjectJResults.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnObjectJResultsActionPerformed(evt);
+        lblPlots.setBackground(new java.awt.Color(255, 255, 255));
+        lblPlots.setIcon(new javax.swing.ImageIcon(getClass().getResource("/oj/gui/icons/plots-48x48.png"))); // NOI18N
+        lblPlots.setText("Plots");
+        lblPlots.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        lblPlots.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        lblPlots.setOpaque(true);
+        lblPlots.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        lblPlots.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                lblPlotsMousePressed(evt);
             }
         });
-        jPanel2.add(btnObjectJResults);
-        jPanel2.add(filler1);
-
-        btnShowInFinder.setFont(new java.awt.Font("Lucida Grande", 0, 10)); // NOI18N
-        btnShowInFinder.setText("Show in Finder");
-        btnShowInFinder.setMaximumSize(new java.awt.Dimension(118, 24));
-        btnShowInFinder.setMinimumSize(new java.awt.Dimension(118, 24));
-        btnShowInFinder.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnShowInFinderActionPerformed(evt);
-            }
-        });
-        jPanel2.add(btnShowInFinder);
-        jPanel2.add(filler3);
-
-        pnlHeader.add(jPanel2);
+        pnlHeader.add(lblPlots);
 
         getContentPane().add(pnlHeader, java.awt.BorderLayout.NORTH);
 
@@ -320,8 +272,8 @@ public class ProjectSettingsOJ extends javax.swing.JFrame {
 
         getContentPane().add(pnlMain, java.awt.BorderLayout.CENTER);
 
-        setSize(new java.awt.Dimension(857, 381));
-        setLocationRelativeTo(null);
+        java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+        setBounds((screenSize.width-516)/2, (screenSize.height-381)/2, 516, 381);
     }// </editor-fold>//GEN-END:initComponents
     private void formWindowClosed(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosed
         ProjectSettingsOJ.instance = null;
@@ -377,13 +329,15 @@ private void formComponentResized(java.awt.event.ComponentEvent evt) {//GEN-FIRS
     }
 }//GEN-LAST:event_formComponentResized
 
-    private void btnShowInFinderActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnShowInFinderActionPerformed
-        oj.gui.menuactions.ViewActionsOJ.ShowProjectFolderAction.actionPerformed(null);
-    }//GEN-LAST:event_btnShowInFinderActionPerformed
+  private void lblPlotsMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblPlotsMousePressed
 
-    private void btnObjectJResultsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnObjectJResultsActionPerformed
-        oj.gui.menuactions.ViewActionsOJ.ResultsViewAction.actionPerformed(null);
-    }//GEN-LAST:event_btnObjectJResultsActionPerformed
+
+      if (PlotSettingsOJ.withPlots) {
+          updateLabels(lblPlots);
+          selectedPanelKey = ProjectSettingsOJ.PLOTS_PANEL;
+          resizeControlPanel();
+      }
+  }//GEN-LAST:event_lblPlotsMousePressed
 
     /**
      * each of the four panels uses different size
@@ -411,13 +365,8 @@ private void formComponentResized(java.awt.event.ComponentEvent evt) {//GEN-FIRS
         return (ColumnSettingsOJ) settingsPanels.get(ProjectSettingsOJ.COLUMNS_PANEL);
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnObjectJResults;
-    private javax.swing.JButton btnShowInFinder;
-    private javax.swing.Box.Filler filler1;
-    private javax.swing.Box.Filler filler2;
-    private javax.swing.Box.Filler filler3;
-    private javax.swing.JPanel jPanel2;
     private javax.swing.JLabel lblImageDefs;
+    private javax.swing.JLabel lblPlots;
     private javax.swing.JLabel lblQualifiers;
     private javax.swing.JLabel lblResults;
     private javax.swing.JLabel lblYtemDefs;

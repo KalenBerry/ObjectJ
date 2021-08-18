@@ -4,7 +4,7 @@
  */
 package oj.macros;
 
-import ij.IJ;
+import java.util.ArrayList;
 
 /**
  * Composes a large piece of macro text containing all "oj" commands, that will
@@ -40,10 +40,6 @@ public class MacroExtStrOJ {
         return "function " + functionName + "(" + arg1 + "," + arg2 + "," + arg3 + "," + arg4 + "){return call(\"oj.macros.ExtensionOJ.handleMacroExtension\",\"" + functionName + "\"," + arg1 + "," + arg2 + "," + arg3 + "," + arg4 + ");}\n";
     }
 
-   private static String getFunction(String functionName, String arg1, String arg2, String arg3, String arg4, String arg5) {
-        return "function " + functionName + "(" + arg1 + "," + arg2 + "," + arg3 + "," + arg4 + "," + arg5 + "){return call(\"oj.macros.ExtensionOJ.handleMacroExtension\",\"" + functionName + "\"," + arg1 + "," + arg2 + "," + arg3 + "," + arg4 + "," + arg5 + ");}\n";
-    }
-
     /*
      * if function's argument is an array, then the array needs first to be converted into a single string, where all array 
      * elements are separated by newLine "\n". This single string is passed to the "call" function
@@ -65,10 +61,11 @@ public class MacroExtStrOJ {
         return "function " + functionName + "(" + arg + "){returnVal = call(\"oj.macros.ExtensionOJ.handleMacroExtension\",\"" + functionName + "\"," + arg + "); return parseFloat(returnVal);}\n";
     }
 
-    private static String getIntFunction(String functionName) {
+    
+      private static String getIntFunction(String functionName) {
         return "function " + functionName + "(){returnVal = call(\"oj.macros.ExtensionOJ.handleMacroExtension\",\"" + functionName + "\"); return parseInt(returnVal);}\n";
-    }
-
+    } 
+      
     private static String getFloatFunction(String functionName) {
         return "function " + functionName + "(){returnVal = call(\"oj.macros.ExtensionOJ.handleMacroExtension\",\"" + functionName + "\"); return parseFloat(returnVal);}\n";
     }
@@ -115,24 +112,24 @@ public class MacroExtStrOJ {
         buf.append(getFunction("ojCloseItem"));
         buf.append(getFunction("ojCloseResults"));
         buf.append(getFunction("ojCloseObject"));
+        //buf.append(getFunction("ojCloseImages", "conditions")); not used
         buf.append(getIntFunction("ojColumnNumber", "columnName"));
+        //buf.append(getFunction("ojCopyFromScreen", "left", "top", "width", "height"));//2.3.2012
         buf.append(getFunction("ojDeleteAllObjects"));
         buf.append(getFunction("ojDeleteColumn", "columnName"));
         buf.append(getFunction("ojDeleteItem", "itemType", "itemNumber"));
-        buf.append(getFunction("ojDeleteItems", "itemTypes"));
         buf.append(getFunction("ojDeleteObject", "objectIndex"));
+        //buf.append(getFunction("ojDisposeAllImages"));26.9.2010
+        //buf.append(getFunction("ojDisposeImage", "imageName"));
         buf.append(getFunction("ojExtendVisibilityDepth", "lowValue", "highValue"));
         buf.append(getIntFunction("ojFirstObject", "imageIndex"));
         buf.append(getFunction("ojFlatten"));//18.10.2011    
 
-        buf.append(getFunction("ojFindClosestPoint", "x", "y", "maxDistance", "itemName"));
+        buf.append(getFunction("ojSelectClosestItem", "x", "y", "tolerance"));//5.11.2009
         buf.append(getStrFunction("ojGetColumnTitle", "columnIndex"));//18.4.2009
         buf.append(getIntFunction("ojGetOpenObject"));
         buf.append(getStrFunction("ojGetItemName"));//6.3.2010
-        buf.append(getStrFunction("ojGetItemNames"));//revalidate!12-2013
-        buf.append(getStrFunction("ojGetItemColors"));//18.8.2015
-        buf.append(getFunction("ojGetPositions", "xArray", "yArray"));
-
+        buf.append(getStrFunction("ojGetItemNames"));//8.6.2011
         buf.append(getStrFunction("ojGetItemTypes"));//8.6.2011
         buf.append(getFloatFunction("ojGetImageValue", "n", "key"));
         buf.append(getStrFunction("ojGetProjectName"));
@@ -141,6 +138,7 @@ public class MacroExtStrOJ {
         buf.append(getFloatFunction("ojGetStatistics", "columnName", "rowIndex"));
         buf.append(getFloatFunction("ojGetVoxelSize", "imageIndex", "xyz"));//17.9.2009
         buf.append(getFunction("ojHideResults"));//24.2.2009
+        buf.append(getFloatArrayFunction("ojGetGlassDimensions"));
         buf.append(getIntFunction("ojImageLink"));
 
         buf.append(getIntFunction("ojIndexToRow", "index"));//14.7.2010
@@ -172,8 +170,7 @@ public class MacroExtStrOJ {
         buf.append(getIntFunction("ojOwnerIndex", "index"));
         buf.append(getStrFunction("ojOwnerName", "index"));
         buf.append(getStrFunction("ojGetTarget"));
-        buf.append(getFunction("ojLineToPolygon", "linewidth", "roundCorners"));
-        buf.append(getFunction("ojRenameImage", "oldName", "newName"));
+
         buf.append(getFunction("ojPutAlgorithm", "algorithm"));
         buf.append(getFunction("ojPutOperand", "itemType", "clone", "point"));
         buf.append(getFunction("ojSetTarget", "string"));
@@ -187,11 +184,9 @@ public class MacroExtStrOJ {
         buf.append(getFunction("ojRoiToItem"));
         buf.append(getFunction("ojRecalculate"));
         buf.append(getFunction("ojRepositionItem", "fromIndex", "toIndex"));
-		buf.append(getFunction("ojRunMacro", "arg"));
-
         buf.append(getFunction("ojSelectItem", "name", "index"));
         buf.append(getFloatFunction("ojGetItemLength"));
-
+                
         buf.append(getIntFunction("ojSelectedObject"));
         buf.append(getStrFunction("ojSelectedItemName"));
 
@@ -199,21 +194,19 @@ public class MacroExtStrOJ {
         buf.append(getFunction("ojSetColumnProperty", "columnName", "propertyName", "propertyValue"));
         buf.append(getFunction("ojSetColumnProperties", "columnName", "properties"));
         buf.append(getFunction("ojSetComposite", "mode"));
+        buf.append(getFunction("ojGlassWindow", "properties"));
 
         buf.append(getFunction("ojSetItemVisible", "itemType", "visible"));
         buf.append(getFunction("ojSetMarker", "xPos", "yPos"));
-        buf.append(getFunction("ojSetMarker5D", "xPos", "yPos", "zPos", "channel", "frame"));
-                
         buf.append(getFunction("ojSetPlotProperties", "ColumnTitle", "properties"));
         buf.append(getFunction("ojSetResult", "columnName", "rowIndex", "value"));
         buf.append(getFunction("ojSetTool", "tool"));
         buf.append(getFunction("ojSetUnchanged"));
         buf.append(getFunction("ojSetValue", "columnName", "rowIndex", "value"));
-        buf.append(getFunction("ojSetVirtualFlag", "virtualFlag"));
-        buf.append(getIntFunction("ojGetVirtualFlag"));
         buf.append(getFunction("ojOrderObjectsInZ", "imageNumber"));
-		buf.append(getFunction("ojRenumberObjects", "src", "dest"));
-
+        
+        
+                
         buf.append(getFunction("ojShowImage", "imageIndex"));
         buf.append(getFunction("ojGetImageName", "imageIndex"));
 
@@ -241,7 +234,6 @@ public class MacroExtStrOJ {
         buf.append(getFunction("ojvPushItem"));
         buf.append(getFunction("ojvPushVertex", "v"));
         buf.append(getFunction("ojvPushPoint", "index"));
-        buf.append(getFunction("ojvUndoPush"));
         buf.append(getFunction("ojPluginTest", "v"));
 
         buf.append(getFloatFunction("ojXPos", "n"));
@@ -249,18 +241,11 @@ public class MacroExtStrOJ {
         buf.append(getFloatFunction("ojZPos", "n"));
         buf.append(getFloatArrayFunction("ojXYZPos", "n"));
 
-		buf.append(getStrFunction("ojGetItemInfo")); //21.1.2019
-		buf.append(getFunction("ojSetItemInfo", "info"));//21.1.2019
-
-		buf.append(getStrFunction("ojGetObjectInfo")); //6.2.2019
-		buf.append(getFunction("ojSetObjectInfo", "info"));//6.2.2019
-
         buf.append(getFunction("ojZoom", "factor", "xHook", "yHook"));
-        buf.append(getFunction("ojTest", "method", "str"));
-				
-				
+        buf.append(getFunction("ojTest"));
         buf.append(getStrFunction("ojTmpFunction", "anything"));
-        
+
+
         buf.append("function ojIntArray(){J__s = call(\"oj.macros.ExtensionOJ.ojIntArray\"); J__A = split(J__s, fromCharCode(10)); for (J__j = 0; J__j < lengthOf(J__A); J__j++) J__A[J__j] = parseInt(J__A[J__j]); return J__A;}\n");
         buf.append("function ojInvertFloatArray(xyz){J__s = call(\"oj.macros.ExtensionOJ.ojInvertFloatArray\", ojArrayToString(xyz)); J__A = ojStringToFloatArray(J__s); return J__A;}\n");
         buf.append("function ojStringArray(){return split(call(\"oj.macros.ExtensionOJ.ojStringArray\"),fromCharCode(10));}\n");
@@ -280,21 +265,7 @@ public class MacroExtStrOJ {
         buf.append("		ar__oj[jj] = parseFloat(ar__oj[jj]);\n");
         buf.append("	return ar__oj;\n");
         buf.append("}\n");
-	
-		//BBEdit: replace \n by:  \\n");\nbuf.append("
-		//take care no globals are affected!
-		buf.append("function ojGetColumn(ss__title, ss__includeAll){\n");
-		//buf.append("  ss__count = 0;\n");
-		buf.append("  ss__values = newArray(ojNObjects());\n");
-		buf.append("  for (ss__obj = 1; ss__obj<= ojNObjects(); ss__obj++){\n");
-		buf.append("    ss__val = ojResult(ss__title, ss__obj);\n");
-		buf.append("    if ((!ojQualified(ss__obj)) && !ss__includeAll)\n");
-		buf.append("	  ss__val = NaN;\n");
-		buf.append("    ss__values[ss__obj-1] = ss__val;\n");
-		buf.append("  }\n ");
-		buf.append("  return ss__values;\n");
-		buf.append("}\n");
-	//IJ.log(buf.toString());
+
         return buf.toString();
     }
 }

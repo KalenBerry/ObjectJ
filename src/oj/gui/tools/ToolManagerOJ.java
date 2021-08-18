@@ -272,8 +272,7 @@ public class ToolManagerOJ {
             if ("down".equals(fields[i].getName())) {
                 fields[i].setAccessible(true);
                 try {
-                    //boolean[] down = new boolean[23];
-                    boolean[] down = new boolean[88];//18.1.2021
+                    boolean[] down = new boolean[23];
                     fields[i].set(Toolbar.getInstance(), down);
                 } catch (IllegalArgumentException ex) {
                     ex.printStackTrace();
@@ -284,8 +283,17 @@ public class ToolManagerOJ {
             if ("current".equals(fields[i].getName())) {
                 fields[i].setAccessible(true);
                 try {
-                    //fields[i].set(Toolbar.getInstance(), new Integer(23));
-                    fields[i].set(Toolbar.getInstance(), new Integer(77));
+                    fields[i].set(Toolbar.getInstance(), new Integer(23));
+                } catch (IllegalArgumentException ex) {
+                    ex.printStackTrace();
+                } catch (IllegalAccessException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            if ("previous".equals(fields[i].getName())) {
+                fields[i].setAccessible(true);
+                try {
+                    fields[i].set(Toolbar.getInstance(), new Integer(22));
                 } catch (IllegalArgumentException ex) {
                     ex.printStackTrace();
                 } catch (IllegalAccessException ex) {

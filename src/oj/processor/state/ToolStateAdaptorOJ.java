@@ -1,9 +1,8 @@
-/**
- * ToolStateAdaptorOJ.java
- * Superclass for CreateCellStateOj, DeleteCellStateOJ etc.
- * E.g. if the user selects the "Marker" tool in ObjectJ Tools,
- * a CreateCellStateOJ is created as current receiver of mouseclicks etc.
-*/
+/*
+ * CellStateAdaptorOJ.java
+ * is extended by CreateCellStateOj, DeleteCellStateOJ etc.
+ * Handles user events from mouse and controls the cursor appearance.
+ */
 package oj.processor.state;
 
 import ij.IJ;
@@ -128,7 +127,10 @@ public class ToolStateAdaptorOJ implements ToolStateOJ {
 
   protected void showMouseStatus(double x, double y) {
     ImagePlus imp = getImagePlus();
-    IJ.showStatus(imp.getLocationAsString((int) x, (int) y) + getValueAsString(imp, (int) x, (int) y));
+    //KB added to stop some error from occuring when the mouse was not in a window. 
+    if (imp!=null){
+    	IJ.showStatus(imp.getLocationAsString((int) x, (int) y) + getValueAsString(imp, (int) x, (int) y));
+    }
   }
 
   protected void setMousePos(ImageCanvas canvas, int xMouse, int yMouse) {

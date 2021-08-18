@@ -1,9 +1,7 @@
 package oj.macros;
 
-import ij.IJ;
 import ij.macro.Interpreter;
 import ij.macro.MacroConstants;
-import ij.macro.MacroRunner;
 import ij.macro.Program;
 import ij.macro.Symbol;
 import ij.macro.Tokenizer;
@@ -47,16 +45,6 @@ public class MacroProgramOJ implements MacroConstants {
     public void install(String macroText, int macroCount) {
         MenuManagerOJ.getInstance().clearSubMenus();
 
-        Interpreter instance = Interpreter.getInstance();//8.4.2015
-        if (instance != null) { // abort any currently running macro
-            instance.abortMacro();
-            long t0 = System.currentTimeMillis();
-            while (Interpreter.getInstance() != null && (System.currentTimeMillis() - t0) < 3000L) {
-                IJ.wait(10);
-            }
-        }
-		//new MacroRunner(text, debug?this:null);
-
         macroNames = new String[macroCount];
         macroStarts = new int[macroCount];
 
@@ -99,12 +87,8 @@ public class MacroProgramOJ implements MacroConstants {
     }
 
     private String extractMacroName(String macroExtName) {
-        
-        int toolIndex = macroExtName.indexOf("Tool");//25.9.2013
-        int minusIndex = macroExtName.lastIndexOf("-");
-        
-        if (toolIndex > 0 && minusIndex > toolIndex) {
-            return macroExtName.substring(0, toolIndex + 4);
+        if (macroExtName.contains("Tool")) {
+            return macroExtName.substring(0, macroExtName.indexOf("Tool") + 4);
         } else {
             StringTokenizer st = new StringTokenizer(macroExtName, "[", true);
             if (st.hasMoreTokens()) {

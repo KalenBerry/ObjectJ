@@ -10,9 +10,7 @@ package oj.gui.menuactions;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
-import ij.gui.Line;
 import ij.gui.Roi;
-import ij.process.FloatPolygon;
 import java.awt.Polygon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -105,6 +103,10 @@ public class CellActionsOJ {
 
         public void actionPerformed(ActionEvent e) {
             final int one = 1;
+
+
+
+
             int cellToShow = 1;
             GenericDialog gd = new GenericDialog("Show Object");
             gd.addNumericField("Object to show", cellToShow, 0);
@@ -180,7 +182,7 @@ public class CellActionsOJ {
                             return;
                         }
                         ytem.setObjectDef(ytemDefName);
-     					 break;
+                        break;
                     case Roi.POLYLINE:
                         ytem = new SeglineOJ();
                         ytemDefName = CellActionsOJ.getYtemDefName(YtemDefOJ.YTEM_TYPE_SEGLINE);
@@ -222,15 +224,11 @@ public class CellActionsOJ {
                     default:
                         return;
                 }
-				FloatPolygon fPoly = roi.getFloatPolygon();
-                //Polygon poly = roi.getPolygon();
+                Polygon poly = roi.getPolygon();
                 //here to continue
-                float[] xc = fPoly.xpoints;//will be implemented later, 1.4.2020
-                float[] yc = fPoly.ypoints;
+                int[] xc = poly.xpoints;
+                int[] yc = poly.ypoints;
                 if (roi.getType() == Roi.LINE) {
-					Line line = (Line)roi;
-	//				ytem.add(new LocationOJ(line.x1d, line.y1d,  cell.getStackIndex()));
-	//				ytem.add(new LocationOJ(line.x2d, line.y2d,  cell.getStackIndex()));
                     ytem.add(new LocationOJ(xc[0], yc[0], cell.getStackIndex()));
                     ytem.add(new LocationOJ(xc[1], yc[1], cell.getStackIndex()));
                 } else if (roi.getType() == Roi.POINT) {

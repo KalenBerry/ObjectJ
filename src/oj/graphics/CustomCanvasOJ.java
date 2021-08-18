@@ -11,24 +11,19 @@ import ij.CompositeImage;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.Macro;
+import ij.Prefs;
 import ij.gui.ImageCanvas;
 import ij.gui.NewImage;
-import ij.gui.Overlay;
-import ij.gui.Roi;
 import ij.macro.Interpreter;
-import ij.plugin.Colors;
-import ij.util.Java2;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextLayout;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import oj.OJ;
@@ -51,23 +46,25 @@ import oj.processor.events.DrawCellListenerOJ;
 import oj.processor.events.YtemDefChangedListenerOJ;
 import oj.project.YtemDefsOJ;
 import oj.project.results.ColumnDefOJ;
-import oj.project.results.ColumnOJ;
-import oj.project.results.ColumnsOJ;
 
 public class CustomCanvasOJ extends ImageCanvas implements DrawCellListenerOJ, CellChangedListenerOJ, YtemChangedListenerOJ, YtemDefChangedListenerOJ {
-
+//KB changing markerRad changes the usual size of a marker and the markerSize changes its size when selected
+	//kb added preferences to adjust marker sizes with default values;
+	
     public static int hits = 0;
-    private int markerRad;
-    private int markerSize;
-    private int fontSize;
-    private Font fontArial= Font.decode("Arial-13");
-    private Font fontArialItalic = Font.decode("Arial-ITALIC-13");
+    public int markerSize = (int) Prefs.get("marker.Size", 16);//kb
+    public int markerRad = (int)Math.floor(markerSize/2);
+ 	public int numPixelsToSquareEdge=(int) Prefs.get("box.Size", 2);;//KB used for square marker box display. Distance is from, but not including center pixel            	
+
+    public double markerMultiplier = Prefs.get("marker.Multiplier", 1.5) ;
     private String imageName;
     private DataOJ dataOJ;
     private ImageOJ image;
     public BufferStrategy buforowanie;
-    //= Font.decode("Arial-13");
-   // public static Font fontArialItalic = Font.decode("Arial-ITALIC-13");
+    public Font fontArial = Font.decode("fontArial-"+Prefs.get("font.Size", "16"));//kb -11 to -16
+    public Font fontArialItalic = Font.decode("fontArialItalic-"+Prefs.get("font.Size", "16"));//kb -11 to -16
+    public int fontSize= Integer.parseInt(Prefs.get("font.Size", "16"));
+    
     private Image offScreenImage;
     private int offScreenWidth = 0;
     private int offScreenHeight = 0;
@@ -77,11 +74,7 @@ public class CustomCanvasOJ extends ImageCanvas implements DrawCellListenerOJ, C
         super(imp);
         this.dataOJ = dataOJ;
         this.imageName = imageName;
-	fontSize = OJ.getData().getLabelFontSize();
-	fontArial = Font.decode("Arial-" + fontSize);
-	fontArialItalic = Font.decode("Arial-ITALIC-" + fontSize);
- 	markerRad = OJ.getData().getMarkerRad();
-	markerSize = markerRad *2;
+
         addKeyListener(KeyEventManagerOJ.getInstance());
 
         image = dataOJ.getImages().getImageByName(imageName);
@@ -153,8 +146,12 @@ public class CustomCanvasOJ extends ImageCanvas implements DrawCellListenerOJ, C
     /**
      * first ImageJ repaints image, then markers are superimposed
      */
+//  public void paintOld(Graphics g) {
+//    super.paint(g);
+//    drawOverlayoj(g);
+//  }
     @Override
-    public void resetDoubleBuffer() { 
+    public void resetDoubleBuffer() {
         super.resetDoubleBuffer();
         offScreenImage = null;
 
@@ -166,22 +163,18 @@ public class CustomCanvasOJ extends ImageCanvas implements DrawCellListenerOJ, C
     //then take the original graphport and draw the complete offscreen image onto it.
     // problem: the entire image is
     public void paint(Graphics g) {
-		hits++;
-		markerRad = OJ.getData().getMarkerRad();
-		markerSize = markerRad * 2;
-		
-		fontSize = OJ.getData().getLabelFontSize();
-		//fontArial = Font.decode("Arial-" + fontSize);
-		//fontArialItalic = Font.decode("Arial-ITALIC-" + fontSize);
-		fontArial = new Font("SansSerif", Font.PLAIN,  fontSize);
-		fontArialItalic = new Font("SansSerif", Font.ITALIC + Font.BOLD,  fontSize);
- 
-		Graphics g2 = getOffscreenGraphics();//3.2.2011
-		super.paint(g2);
-		drawOverlayoj(g2);
-		g.drawImage(offScreenImage, 0, 0, null);
+        hits++;
+        if (!IJ.isWindows() || !OJ.doubleBuffered) {
+            super.paint(g);
+            drawOverlayoj(g);
 
-	}
+        } else {
+            Graphics g2 = getOffscreenGraphics();//3.2.2011
+            super.paint(g2);
+            drawOverlayoj(g2);
+            g.drawImage(offScreenImage, 0, 0, null);
+        }
+    }
 
     Graphics getOffscreenGraphics() {
         final int srcRectWidthMag = (int) (srcRect.width * magnification);
@@ -194,28 +187,18 @@ public class CustomCanvasOJ extends ImageCanvas implements DrawCellListenerOJ, C
         return offScreenImage.getGraphics();
     }
 
-    public void makeFlattenedImage() {
+    public void makeFlattenedImage() {//19.10.2011
         if (ImageProcessorOJ.isFrontImageLinked()) {
-            String name = "Flat_" + imp.getTitle();
-			Overlay overlay1 = imp.getOverlay();
-			imp.setOverlay(null);
-			imp.killRoi();
-            ImagePlus flatImp = NewImage.createRGBImage(name, imp.getWidth(), imp.getHeight(), 1, 0);
-            BufferedImage bufferedImage = flatImp.getBufferedImage();
-
+            String name = "Flat-" + imp.getTitle();
+           ImagePlus flatImp = NewImage.createRGBImage(name, imp.getWidth(), imp.getHeight(), 1, 0);
+           BufferedImage bufferedImage = flatImp.getBufferedImage();
+           
             Graphics g3 = bufferedImage.getGraphics();
             super.paint(g3);
             drawOverlayoj(g3);
             flatImp.setImage(bufferedImage);
-			imp.setOverlay(overlay1);
-			if(overlay1 != null){
-				Overlay overlay2=overlay1.duplicate();
-				flatImp.setOverlay(overlay2);
-				flatImp = flatImp.flatten();
-			}
-			flatImp.setTitle(name);
             flatImp.show();
-       } else {
+        } else {
             IJ.error("Front image is not linked");
         }
     }
@@ -278,7 +261,6 @@ public class CustomCanvasOJ extends ImageCanvas implements DrawCellListenerOJ, C
         }
         srcRect = new Rectangle(ic.getSrcRect().x, ic.getSrcRect().y, ic.getSrcRect().width, ic.getSrcRect().height);
         setMagnification(ic.getMagnification());
-        setOverlay(ic.getOverlay());// 11.12.2014
         setDrawingSize(ic.getPreferredSize().width, ic.getPreferredSize().height);
     }
 
@@ -312,24 +294,11 @@ public class CustomCanvasOJ extends ImageCanvas implements DrawCellListenerOJ, C
 
     /**
      * returns true if channel content is visible- even though it may be blended
-     * with others
+     * with others. The preference marker.channelMustBeActive makes this function always return true. 
      */
     public static boolean isActiveChannel(ImagePlus imp, int channel) {
-        boolean[] active = ((CompositeImage) imp).getActiveChannels();
-        return active[channel];
-    }
-
-    ColumnOJ getLabelColumn() {
-        ColumnsOJ columns = dataOJ.getResults().getColumns();
-        for (int jj = 0; jj < columns.getLinkedColumnsCount(); jj++) {
-            ColumnOJ column = columns.getColumnByIndex(jj);
-            ColumnDefOJ coldef = column.getColumnDef();
-            String labelInfo = coldef.getLabel();
-            if (labelInfo != null && labelInfo.startsWith("label")) {
-                return column;
-            }
-        }
-        return null;
+    	boolean[] active = ((CompositeImage) imp).getActiveChannels();
+    	return active[channel]; 
     }
 
     /**
@@ -337,49 +306,37 @@ public class CustomCanvasOJ extends ImageCanvas implements DrawCellListenerOJ, C
      */
     public void drawOverlayoj(Graphics g) {//25.3.2012 made public
 
-        if (g == null || image == null || dataOJ == null || !OJ.isProjectOpen) {
+        if (g == null || image == null || dataOJ == null ||  !OJ.isProjectOpen) {
             return;//11.10.2012
         }
         if (IJ.isMacro() && OJ.getMacroProcessor().getTargetImage() != null) {
             return;
         }
-        ColumnOJ labelColumn = getLabelColumn();
-        ColumnDefOJ labelColDef = null;
-        String labelProperty;
-        Color backColor = null;
-        if (labelColumn != null) {
-            labelColDef = labelColumn.getColumnDef();
-            if (labelColDef != null) {
-                labelProperty = labelColDef.getLabel();// could be "label background=#ff0000";
-                String assignments[] = labelProperty.split(" ");
-                if (assignments.length > 0) {
-                    for (int jj = 0; jj < assignments.length; jj++) {
-                        String[] words = assignments[jj].split("=");
-                        if (words.length == 2) {
-                            if (words[0].equalsIgnoreCase("background")) {
-                                backColor = Colors.getColor(words[1], null);
-                                if (backColor== null)backColor = Colors.decode(words[1], null);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        boolean allvisible = true;
+         boolean allvisible = true;
         YtemDefsOJ ytemDefs = OJ.getData().getYtemDefs();
         if (ytemDefs != null) {
             allvisible = ytemDefs.isCellLayerVisible();
         }
 
+        //       if (OJ.getData().getYtemDefs().isCellLayerVisible()) {
         if (allvisible) {
-            if (fontSize >= 12) {
-                Java2.setAntialiasedText(g, true);//18.12.2018
-            }
             int visRangeHigh = OJ.getData().getYtemDefs().getVisRangeHigh();//28.1.2009
             int visRangeLow = OJ.getData().getYtemDefs().getVisRangeLow();
             FontRenderContext frc = ((Graphics2D) g).getFontRenderContext();
             Rectangle rectangle = getSrcRect();
             double magnif = getMagnification();
+            
+            // TODO : beginning of label changer code
+            boolean hasRelNumberingColumn = false;
+            String relNumberingColumnName = "";
+            int numAllCols = dataOJ.getResults().getColumns().getAllColumnsCount();
+            for (int anInd = 0; anInd < numAllCols; anInd++) {
+            	if (dataOJ.getResults().getColumns().getColumnByIndex(anInd).getColumnDef().getAlgorithm() == ColumnDefOJ.ALGORITHM_CALC_OBJECT_NUMBER_RELATIVE_TO_IMAGE) {
+            		hasRelNumberingColumn = true;
+            		relNumberingColumnName = dataOJ.getResults().getColumns().getColumnByIndex(anInd).getName();
+            		break;
+            	}	
+            }
             int firstCell = image.getFirstCell();
             int lastCell = image.getLastCell();
             int imageStackIndex = imp.getCurrentSlice();
@@ -400,48 +357,69 @@ public class CustomCanvasOJ extends ImageCanvas implements DrawCellListenerOJ, C
                         int ytemsCount = cell.getYtemsCount();
                         for (int ytemNo = 0; ytemNo < ytemsCount; ytemNo++) {
                             YtemOJ ytem = cell.getYtemByIndex(ytemNo);
+                            boolean visible = false;
+                            //KB TODO Here you can change the default homeslice options
                             if (ytem != null) {//11.7.2011
-                                if (ytem.getRoiBytes() != null) {//8.10.2014
-
-                                    Roi roi = ytem.getIJRoi();
-                                    //roi.draw(g);
-                                    roi.drawOverlay(g);
-                                }
                                 int homeSlice = ytem.getStackIndex();
                                 if (homeSlice == 0) {
                                     homeSlice = cell.getStackIndex();
                                 }
+                                
+                                int upperLimit = homeSlice + visRangeHigh;
+                                if (visRangeHigh == -1) {
+                                    //upperLimit = Integer.MAX_VALUE;
+                                	upperLimit = 0;
+                                }
+                                int lowerLimit = homeSlice - visRangeLow;
+                                if (visRangeLow == -1) {
+                                    lowerLimit = 0;
+                                }
+
                                 if ((imp instanceof CompositeImage) && (((CompositeImage) imp).getMode() == CompositeImage.COMPOSITE)) {
                                     int channel = getChannel(imp, homeSlice);
                                     int slice = getSlice(imp, homeSlice);
                                     int frame = getFrame(imp, homeSlice);
-                                    if (!isActiveChannel(imp, channel - 1)) {
-                                        continue;
+                                    // TODO: high and low slices and frames
+                                    int hiFrame = getFrame(imp, upperLimit);
+                                    int hiSlice = getSlice(imp, upperLimit);
+                                    int loFrame = getFrame(imp, lowerLimit);
+                                    int loSlice = getSlice(imp, lowerLimit);
+                                    
+                                    visible = (imp.getSlice() >= loSlice) && (imp.getSlice() <= hiSlice) && (imp.getFrame() >= loFrame) && (imp.getFrame() <= hiFrame);//28.1.2009
+                                    
+                                    // toggle whether channels on inactive channels are displayed
+                                    int prefCheck=(int) Prefs.get("marker.channelMustBeActive", 0);
+                                    if (prefCheck==1){
+                                    	if (!isActiveChannel(imp, channel - 1)) {
+                                    		continue;
+                                    	}
                                     }
+
+                                    
                                     if ((slice != imp.getSlice()) || (frame != imp.getFrame())) {
-                                        continue;
+                                    	if (!visible)
+                                    		continue;
                                     }
                                 } else {
-                                    int upperLimit = homeSlice + visRangeHigh;
+/*                                    int upperLimit = homeSlice + visRangeHigh;
                                     if (visRangeHigh == -1) {
                                         upperLimit = Integer.MAX_VALUE;
                                     }
                                     int lowerLimit = homeSlice - visRangeLow;
                                     if (visRangeLow == -1) {
                                         lowerLimit = 0;
-                                    }
+                                    }*/
 
-                                    boolean visible = (imageStackIndex >= lowerLimit) && (imageStackIndex <= upperLimit);//28.1.2009
-
+                                    visible = (imageStackIndex >= lowerLimit) && (imageStackIndex <= upperLimit);//28.1.2009 
                                     if (!visible) {
                                         continue;
                                     }
                                 }
                                 YtemDefOJ ydef = dataOJ.getYtemDefs().getYtemDefByName(ytem.getYtemDef());
-                                if ((ydef != null) && ydef.isVisible()) {
+                                //if ((ydef != null) && ydef.isVisible()) {
+                                if ((ydef != null) && (ydef.isVisible())){ //KB want some things hidden|| visible)) { // TODO: fixed visible stuff here? (10/29/13)
                                     int ydefType = ydef.getLineType();
-                                    Color ytemColor = ydef.getLineColor();
-                                    g.setColor(ytemColor);
+                                    g.setColor(ydef.getLineColor());
                                     double line_width = 1.0;
                                     switch (ydefType) {
                                         case YtemDefOJ.LINE_TYPE_ZEROPT:
@@ -487,6 +465,8 @@ public class CustomCanvasOJ extends ImageCanvas implements DrawCellListenerOJ, C
                                             case YtemDefOJ.YTEM_TYPE_ROI:
                                                 if (ydefType != YtemDefOJ.LINE_TYPE_ZEROPT) {
 
+
+
                                                     if (ytem.isOpen()) {
                                                         g.drawPolyline(x_array, y_array, x_array.length);//don't close shape while it is open, 8.7.2009
                                                     } else {
@@ -496,76 +476,87 @@ public class CustomCanvasOJ extends ImageCanvas implements DrawCellListenerOJ, C
                                                 break;
                                             default:
                                         }
+                                        
+                                        int markerHolder;
+                                    
+                                        
+                                        if (cell.isQualified()){
+                                        	markerHolder = ydef.getMarkerType();
+                                        }else{
+                                            //KB change marker type to this if the item is qualified
 
-                                        if (ytem.getType() != YtemDefOJ.YTEM_TYPE_ROI) {
-                                            for (int j = 0; j < x_array.length; j++) {
-                                                drawMarker((Graphics2D) g, x_array[j], y_array[j], ydef.getMarkerType(), cell.isSelected());
-                                            }
-                                        } else {
-                                            drawMarker((Graphics2D) g, x_array[0], y_array[0], ydef.getMarkerType(), cell.isSelected());
+                                        	markerHolder = YtemDefOJ.getMarkerType("diamond");
                                         }
 
-                                        if (!EventProcessorOJ.BlockEventsOnDrag && (x_array.length > 0) && ytemNo == 0) {//draw number and value from label column
-                                            Font theFont = fontArial;
-                                            Color foreColor = ytemColor;
-                                            Color currentBackColor = backColor;
-                                            String numStr = Integer.toString(i + 1);
+										if (ytem.getType() != YtemDefOJ.YTEM_TYPE_ROI) {
+                                            for (int j = 0; j < x_array.length; j++) {
+                                                drawMarker((Graphics2D) g, x_array[j], y_array[j], markerHolder, cell.isSelected());
+                                            }
+                                        } else {
+                                            drawMarker((Graphics2D) g, x_array[0], y_array[0], markerHolder, cell.isSelected());
+                                        }
+                                    }
 
-                                            if (cell.isOpen()) {
-                                                numStr = "*" + numStr + "*";
-                                                theFont = fontArialItalic;
-                                            }
-                                            if (!cell.isQualified()) {
-                                                currentBackColor = Color.LIGHT_GRAY;
-                                                foreColor = Color.DARK_GRAY;
-                                                numStr = "{" + numStr + "}";
-                                            }
-                                            String labelStr = "";
-                                            String totalStr = "";
-                                            boolean doLabel = (labelColumn != null && ytemNo == 0);
-                                            if (doLabel) {
-                                                ColumnDefOJ coldef = labelColumn.getColumnDef();
-                                                int digits = coldef.getColumnDigits();
-                                                boolean isText = coldef.getAlgorithm() == ColumnDefOJ.ALGORITHM_CALC_LINKED_TEXT;
-
-                                                if (isText) {
-                                                    labelStr = labelColumn.getStringResult(i);
-                                                } else {
-                                                    double val = labelColumn.getDoubleResult(i);
-                                                    if (Double.isNaN(val)) {
-                                                        labelStr = "";
-                                                    } else {
-                                                        labelStr = IJ.d2s(val, digits);
-                                                    }
-                                                }
-                                            }
-                                            if (show_cell_number) {
-                                                totalStr += numStr;
-                                            }
-                                            if (doLabel && show_cell_number) {
-                                                totalStr += ": ";
-                                            }
-                                            if (doLabel) {
-                                                totalStr += labelStr;
-                                            }
-                                            if (totalStr.length() > 0) {
-                                                TextLayout layout = new TextLayout(totalStr, theFont, frc);
-                                                FontMetrics fm = g.getFontMetrics(theFont);
-                                                Rectangle2D rect = fm.getStringBounds(totalStr, g);
-
-                                                int x = x_array[0];
-                                                x -= (int) (rect.getWidth() / 2);
-                                                int y = y_array[0];
-                                                y -= (int) (fontSize / 3 - markerRad + 2);
-
-                                                if (backColor != null) {
-                                                    g.setColor(currentBackColor);
-                                                    g.fillRect(x, y - fm.getAscent(), (int) rect.getWidth(), (int) rect.getHeight());
-                                                }
-                                                g.setColor(foreColor);
-                                                layout.draw((Graphics2D) g, (float) x, (float) (y));
-                                            }
-
+                                    if (!EventProcessorOJ.BlockEventsOnDrag && (x_array.length > 0) && show_cell_number && (ytemNo == 0)) {
+                                       
+//KB introduced the calLayoutCenter function to fix x and y bounds. 
+                                    	
+                                    	
+                                    	
+                                    	
+                                        // TODO : this is where labels are set
+                                        //KB removed gray outs for non qualified texts
+                                        if (!hasRelNumberingColumn) { // top portion preserved from old code.
+	                                        if (cell.isOpen()) {
+	                                            if (cell.isQualified()) {
+	                                                TextLayout layout = new TextLayout("*" + Integer.toString(i + 1) + "*", fontArialItalic, frc);//15.3.2010
+	                                                layout.draw((Graphics2D) g, centerLayoutX(layout, x_array[0]), centerLayoutY(layout, y_array[0])); 
+	                                            } else {
+	                                              //  g.setColor(Color.GRAY);
+	                                                TextLayout layout = new TextLayout("{* " + Integer.toString(i + 1) + "}", fontArialItalic, frc);
+	                                                layout.draw((Graphics2D) g, centerLayoutX(layout, x_array[0]), centerLayoutY(layout, y_array[0]));
+	                                            }
+	                                        } else {
+	                                            if (cell.isQualified()) {
+	                                                TextLayout layout = new TextLayout(Integer.toString(i + 1), fontArial, frc);
+	                                                layout.draw((Graphics2D) g, centerLayoutX(layout, x_array[0]), centerLayoutY(layout, y_array[0]));
+	                                            } else {
+	                                             //   g.setColor(Color.LIGHT_GRAY);
+	                                                TextLayout layout = new TextLayout("{" + Integer.toString(i + 1) + "}", fontArial, frc);
+	                                                layout.draw((Graphics2D) g, centerLayoutX(layout, x_array[0]), centerLayoutY(layout, y_array[0])); //31.8.2009
+	                                             //   g.setColor(Color.DARK_GRAY);
+	                                                layout.draw((Graphics2D) g, centerLayoutX(layout, x_array[0]), centerLayoutY(layout, y_array[0]));
+	
+	                                            }
+	                                        }
+                                        }
+                                        else { // adopted from old code, but is new code
+                                        	//dataOJ.getResults().recalculate();
+                                        	//double n = Double.parseDouble(cell.getProperty(relNumberingColumnName));
+                                        	//int numToPut = (int) n;
+                                        	int numToPut = (i - firstCell) + 1;
+	                                        if (cell.isOpen()) {
+	                                            if (cell.isQualified()) {
+	                                                TextLayout layout = new TextLayout("*" + Integer.toString(numToPut) + "*", fontArialItalic, frc);//15.3.2010
+	                                                layout.draw((Graphics2D) g, centerLayoutX(layout, x_array[0]), centerLayoutY(layout, y_array[0]));
+	                                            } else {
+	                                               // g.setColor(Color.GRAY);
+	                                                TextLayout layout = new TextLayout("{* " + Integer.toString(numToPut) + "}", fontArialItalic, frc);
+	                                                layout.draw((Graphics2D) g, centerLayoutX(layout, x_array[0]), centerLayoutY(layout, y_array[0]));
+	                                            }
+	                                        } else {
+	                                            if (cell.isQualified()) {
+	                                                TextLayout layout = new TextLayout(Integer.toString(numToPut), fontArial, frc);
+	                                                layout.draw((Graphics2D) g, centerLayoutX(layout, x_array[0]), centerLayoutY(layout, y_array[0]));
+	                                            } else {
+	                                               // g.setColor(Color.LIGHT_GRAY);
+	                                                TextLayout layout = new TextLayout("{" + Integer.toString(numToPut) + "}", fontArial, frc);
+	                                                layout.draw((Graphics2D) g, centerLayoutX(layout, x_array[0]), centerLayoutY(layout, y_array[0])); //31.8.2009
+	                                               // g.setColor(Color.DARK_GRAY);
+	                                                layout.draw((Graphics2D) g, centerLayoutX(layout, x_array[0]), centerLayoutY(layout, y_array[0]) );
+	
+	                                            }
+	                                        }
                                         }
                                     }
                                 }
@@ -580,9 +571,11 @@ public class CustomCanvasOJ extends ImageCanvas implements DrawCellListenerOJ, C
     /**
      * draws one of the marker types plus, square, cross, dot, pixel, diamond
      */
-    private void drawMarker(Graphics2D g, int xpos, int ypos, int markerType, boolean selected) {       	
-	if (selected) {
-            g.fillRect(xpos - markerRad - 1, ypos - markerRad - 1, 2 * markerSize - 1, 2 * markerSize - 1);
+    private void drawMarker(Graphics2D g, int xpos, int ypos, int markerType, boolean selected) {
+        if (selected) { // TODO : made markers bigger
+        	// original
+        	// g.fillRect(xpos - markerRad - 1, ypos - markerRad - 1, 2 * markerSize - 1, 2 * markerSize - 1);
+            g.fillRect(xpos - (int)(markerRad), ypos - (int)(markerRad), (int)Math.floor(markerMultiplier * markerSize), (int)Math.floor(markerMultiplier * markerSize ));//KB 2*markerSize rather than 1
         } else {
             ((Graphics2D) g).setStroke(new BasicStroke((float) 1.0));
             switch (markerType) {
@@ -597,24 +590,80 @@ public class CustomCanvasOJ extends ImageCanvas implements DrawCellListenerOJ, C
                     g.drawLine(xpos + markerRad, ypos, xpos, ypos - markerRad);
                     break;
                 case YtemDefOJ.MARKER_TYPE_DOT:
-                    g.fillRect(xpos - markerRad, ypos - markerRad, markerSize, markerSize);
+                    g.fillRect(xpos - markerRad, ypos - markerRad, markerSize, markerSize);                  
                     break;
                 case YtemDefOJ.MARKER_TYPE_PIXEL:
-                    g.drawLine(xpos, ypos, xpos, ypos);
+                  
+                	g.drawLine(xpos, ypos, xpos, ypos);
                     break;
                 case YtemDefOJ.MARKER_TYPE_PLUS:
                     g.drawLine(xpos, ypos - markerRad, xpos, ypos + markerRad);
                     g.drawLine(xpos - markerRad, ypos, xpos + markerRad, ypos);
                     break;
                 case YtemDefOJ.MARKER_TYPE_SQUARE:
-                    g.drawRect(xpos - markerRad, ypos - markerRad, markerSize, markerSize);
-                    break;
+                    //KB original g.drawRect(xpos - markerRad, ypos - markerRad, markerSize, markerSize);
+                    
+                	 //KB subverting this type to draw me a square with a defined radius in units of actual image pixels
+                    // the Coordinate system here is based on the images resolution and is rescaled every time we zoom in or out
+                 	int[] imSize= {imageHeight, imageWidth};
+                 	
+                 	int magnif= (int) Math.round(getMagnification());
+                 	if (magnif<1)
+                 		magnif=1;
+                 	int markerPixelRad = magnif*numPixelsToSquareEdge;
+                 	//for a given X we find the offset from the leading pixel edge with Mod. Subtracting half the width of a pixel centers us
+                 	//if the width is 10 and we are 3 from the leading edge this results in -2; subtracting that from the number that gave us 3 from leading edge would move
+                 	//that number to 5 which is the center
+                 	int centerOffsetX=((xpos-1)%magnif-magnif/2);//xpos-1 makes the mod line up since these coords aren't 0 based
+                 	int centerOffsetY=((ypos-1)%magnif-magnif/2);
+                 	
+                 	//This gives me the center location of the nearest pixel
+                 	int centerCurrentX=xpos-centerOffsetX;
+                 	int centerCurrentY=ypos-centerOffsetY;
+                 	//This gives me the size of the box I need to cover all the pixels I want
+                 	int boxedRegionHeightandWidth=markerPixelRad*2+magnif;//magnif is the number of pixels the display uses to represent 1 real pixel
+                 	int boxedRegionRad=Math.round(boxedRegionHeightandWidth/2);
+
+                 	g.fillRect(centerCurrentX-Math.round(magnif/2), centerCurrentY-Math.round(magnif/2), magnif, magnif); // fills center pixel
+                    g.drawRect(centerCurrentX - boxedRegionRad, centerCurrentY - boxedRegionRad, boxedRegionHeightandWidth, boxedRegionHeightandWidth); // outlines outer region                  
+                  	break;
                 default:
                     g.drawRect(xpos - markerRad, ypos - markerRad, markerSize, markerSize);
             }
         }
     }
 
+    public float centerLayoutX(TextLayout layout, int x){
+ 
+	//KB layout  has info about the box needed to draw the text. The actual drawing requires the origin of this layout
+    //
+ 
+    	float width=(float) layout.getBounds().getWidth();
+    	float xD;
+	   
+    	if (x < width) {
+	        xD = x + (width/2+(float) layout.getBounds().getX());
+	    } else {
+	    	xD = x - (width/2+(float) layout.getBounds().getX());
+	    }
+    	
+    	return xD;
+    }
+    
+    public float centerLayoutY(TextLayout layout, int y){
+    	//markerRad multiplier adjusts height above box. 
+    	float height=(float) layout.getBounds().getHeight() + (float) layout.getBounds().getY()+(float) (.05+markerMultiplier)*markerRad;	
+    	float yD;
+	   
+    	if (y < height) {
+	        yD = y + (height);
+	    } else {
+	    	yD = y - (height);
+	    }  	
+    	
+    	return yD;
+    }
+    
     public void ytemDefChanged(YtemDefChangedEventOJ evt) {
         repaint();
     }

@@ -5,7 +5,6 @@
 package oj.gui.settings;
 
 import ij.IJ;
-import ij.ImagePlus;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -33,7 +32,6 @@ import oj.util.UtilsOJ;
 import oj.project.ImageOJ;
 import oj.graphics.RoundPanelOJ;
 import oj.io.OpenDialogOJ;
-import oj.plugin.SimpleCommandsOJ;
 import oj.processor.ImageProcessorOJ;
 import oj.processor.events.CellChangedEventOJ;
 import oj.processor.events.CellChangedListenerOJ;
@@ -49,7 +47,7 @@ import oj.project.ImagesOJ;
  * Panel that holds the table of linked images
  */
 public class ImageDefsSettingsOJ extends javax.swing.JPanel implements TableColumnModelListener, IControlPanelOJ, ImageChangedListener2OJ, YtemDefChangedListenerOJ, CellChangedListenerOJ {
-    
+
     private ImageDefsHeaderRenderer imageDefsHeaderRenderer = new ImageDefsHeaderRenderer();
     private ImageDefsTableRenderer imageDefsTableRenderer = new ImageDefsTableRenderer();
     private Dimension panelSize = new Dimension(600, 298);
@@ -60,7 +58,7 @@ public class ImageDefsSettingsOJ extends javax.swing.JPanel implements TableColu
     public ImageDefsSettingsOJ() {
         initComponents();
         initExtComponents();
-        
+
         OJ.getEventProcessor().addCellChangedListener(this);
         OJ.getEventProcessor().addImageChangedListener(this);
     }
@@ -80,16 +78,15 @@ public class ImageDefsSettingsOJ extends javax.swing.JPanel implements TableColu
         tblImageDefs.setEnabled(true);
         tblImageDefs.getTableHeader().setOpaque(false);
         tblImageDefs.getTableHeader().setDefaultRenderer(imageDefsHeaderRenderer);
-        
+
         tblImageDefs.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
 //        new DropTarget(tblImageDefs, ImageDnDOJ.dropOperations, ImageDnDOJ.getInstance());
 //        new DropTarget(jScrollPane1, ImageDnDOJ.dropOperations, ImageDnDOJ.getInstance());
         new DropTarget(tblImageDefs, ImageProcessorOJ.dropOperations, OJ.getImageProcessor());
         new DropTarget(jScrollPane1, ImageProcessorOJ.dropOperations, OJ.getImageProcessor());
-        
+
         chkShowObjectLayer.setSelected(OJ.getData().getYtemDefs().isCellLayerVisible());
-        chkVirtualFlag.setSelected(OJ.getData().getImages().getVirtualFlag());
     }
 
     /**
@@ -103,14 +100,11 @@ public class ImageDefsSettingsOJ extends javax.swing.JPanel implements TableColu
 
         jPanel1 = new javax.swing.JPanel();
         chkShowObjectLayer = new javax.swing.JCheckBox();
-        labelShowLayer = new javax.swing.JLabel();
-        chkVirtualFlag = new javax.swing.JCheckBox();
-        labelVirtualFlag = new javax.swing.JLabel();
+        jLabel1 = new javax.swing.JLabel();
         jPanel3 = new javax.swing.JPanel();
         jPanel4 = new RoundPanelOJ();
         jPanel8 = new javax.swing.JPanel();
         btnLinkImage = new javax.swing.JButton();
-        jButton1 = new javax.swing.JButton();
         btnUnlinkImage = new javax.swing.JButton();
         jPanel7 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
@@ -131,20 +125,8 @@ public class ImageDefsSettingsOJ extends javax.swing.JPanel implements TableColu
         });
         jPanel1.add(chkShowObjectLayer, new java.awt.GridBagConstraints());
 
-        labelShowLayer.setText("Show Object Layer                   ");
-        jPanel1.add(labelShowLayer, new java.awt.GridBagConstraints());
-
-        chkVirtualFlag.setMaximumSize(new java.awt.Dimension(50, 23));
-        chkVirtualFlag.setMinimumSize(new java.awt.Dimension(50, 23));
-        chkVirtualFlag.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkVirtualFlagActionPerformed(evt);
-            }
-        });
-        jPanel1.add(chkVirtualFlag, new java.awt.GridBagConstraints());
-
-        labelVirtualFlag.setText("Virtual Flag");
-        jPanel1.add(labelVirtualFlag, new java.awt.GridBagConstraints());
+        jLabel1.setText("Show Object Layer");
+        jPanel1.add(jLabel1, new java.awt.GridBagConstraints());
 
         add(jPanel1, java.awt.BorderLayout.NORTH);
 
@@ -167,14 +149,6 @@ public class ImageDefsSettingsOJ extends javax.swing.JPanel implements TableColu
             }
         });
         jPanel8.add(btnLinkImage);
-
-        jButton1.setText("Link all");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
-            }
-        });
-        jPanel8.add(jButton1);
 
         btnUnlinkImage.setText("Unlink");
         btnUnlinkImage.setEnabled(false);
@@ -213,6 +187,9 @@ public class ImageDefsSettingsOJ extends javax.swing.JPanel implements TableColu
             public void mousePressed(java.awt.event.MouseEvent evt) {
                 tblImageDefsMousePressed(evt);
             }
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblImageDefsMouseClicked(evt);
+            }
         });
         jScrollPane1.setViewportView(tblImageDefs);
 
@@ -248,7 +225,8 @@ private void btnLinkImageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        } else {
+        }
+        else {
             IJ.beep();
             IJ.showStatus("File is not an image");
         }
@@ -272,30 +250,6 @@ private void tblImageDefsMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRS
         btnUnlinkImage.setEnabled(false);
     } else {
         btnUnlinkImage.setEnabled(index >= 0);
-    }   	
-int row = tblImageDefs.rowAtPoint(evt.getPoint());//8.2.2014
-    int column = tblImageDefs.columnAtPoint(evt.getPoint());
-    boolean ctrl = evt.isControlDown();
-    ImagesOJ images = OJ.getData().getImages();
-    int nImages = images.getImagesCount();
-    if (row >= nImages) {
-        return;
-    }
-    if (((evt.getButton() == java.awt.event.MouseEvent.BUTTON1)) && !ctrl && (evt.getClickCount() == 2)) {
-	ImageOJ imj = images.getImageByIndex(row);
-        if (imj != null) {
-            OJ.getImageProcessor().openImage(imj.getName());
-        }
-    } else if ((evt.getButton() == java.awt.event.MouseEvent.BUTTON3 || ctrl) && (column == 3)) {
-        OJ.getImageProcessor().propagateScale(row);
-    } else if ((evt.getButton() == java.awt.event.MouseEvent.BUTTON3 || ctrl) && (column == 0)) {//8.2.2014
-        ImageOJ img = OJ.getData().getImages().getImageByIndex(row);
-        if (img != null) {
-            String error = SimpleCommandsOJ.renameImageAndFile(img.getName(), "");
-            if (!error.equals("")) {
-                IJ.showMessage(error);
-            }
-        }
     }
 }//GEN-LAST:event_tblImageDefsMousePressed
 
@@ -303,29 +257,45 @@ private void jScrollPane1AncestorAdded(javax.swing.event.AncestorEvent evt) {//G
     jScrollPane1.getColumnHeader().setOpaque(false);
 }//GEN-LAST:event_jScrollPane1AncestorAdded
 
-    private void chkVirtualFlagActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkVirtualFlagActionPerformed
-		boolean vFlag = chkVirtualFlag.isSelected();
-		OJ.getData().getImages().setVirtualFlag(vFlag);
-    }//GEN-LAST:event_chkVirtualFlagActionPerformed
+private void tblImageDefsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblImageDefsMouseClicked
+    //select row showing this image name, and open if it was double-clicked
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-	OJ.getImageProcessor().linkAllImages();
-    }//GEN-LAST:event_jButton1ActionPerformed
 
+
+
+    int index = tblImageDefs.getSelectedRow();
+    int column = tblImageDefs.getSelectedColumn();
+    boolean ctrl = evt.isControlDown();
+
+
+    ImagesOJ images = OJ.getData().getImages();
+
+    int notSame = 0;
+    int nImages = images.getImagesCount();
+    if (index >= nImages) {
+        return;
+    }
+
+    if (((evt.getButton() == java.awt.event.MouseEvent.BUTTON1)) && !ctrl && (evt.getClickCount() == 2)) {
+        ImageOJ imj = images.getImageByIndex(index);
+        if (imj != null) {
+            OJ.getImageProcessor().openImage(imj.getName());
+        }
+    } else if ((evt.getButton() == java.awt.event.MouseEvent.BUTTON3 || ctrl) && (column == 3)) {
+        OJ.getImageProcessor().propagateScale(index);
+    }
+}//GEN-LAST:event_tblImageDefsMouseClicked
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnLinkImage;
     private javax.swing.JButton btnUnlinkImage;
     private javax.swing.JCheckBox chkShowObjectLayer;
-    private javax.swing.JCheckBox chkVirtualFlag;
-    private javax.swing.JButton jButton1;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel7;
     private javax.swing.JPanel jPanel8;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JLabel labelShowLayer;
-    private javax.swing.JLabel labelVirtualFlag;
     private javax.swing.JTable tblImageDefs;
     // End of variables declaration//GEN-END:variables
 
@@ -357,16 +327,16 @@ private void jScrollPane1AncestorAdded(javax.swing.event.AncestorEvent evt) {//G
             }
         }
     }
-    
+
     public void columnRemoved(TableColumnModelEvent e) {
     }
-    
+
     public void columnMoved(TableColumnModelEvent e) {
     }
-    
+
     public void columnMarginChanged(ChangeEvent e) {
     }
-    
+
     public void columnSelectionChanged(ListSelectionEvent e) {
     }
 
@@ -374,12 +344,8 @@ private void jScrollPane1AncestorAdded(javax.swing.event.AncestorEvent evt) {//G
      * called e.g. when the user changed the name of a linked image
      */
     public synchronized void imageChanged(ImageChangedEventOJ evt) {//9.9.2009
-		
         if (evt.getOperation() == ImageChangedEventOJ.IMAGE_EDITED) {
             ((ImageDefsTableModel) tblImageDefs.getModel()).fireTableUpdated();
-        } else if (evt.getOperation() == ImageChangedEventOJ.VIRTUAL_FLAG_CHANGED) {
-            chkVirtualFlag.setSelected(OJ.getData().getImages().getVirtualFlag());
-			
         } else {
             ((ImageDefsTableModel) tblImageDefs.getModel()).fireTableStructureChanged();
         }
@@ -392,7 +358,7 @@ private void jScrollPane1AncestorAdded(javax.swing.event.AncestorEvent evt) {//G
      * Defines how table's header cells will look like
      */
     public class ImageDefsHeaderRenderer extends JLabel implements TableCellRenderer {
-        
+
         private Font fontArialBold = Font.decode("Arial-BOLD-12");
         //private Color headerBackground = oj.OJ.headerBackground;//new Color(0, 0, 55);//17.5.2010 headerBackground = javax.swing.UIManager.getDefaults().getColor("InternalFrame.activeTitleBackground");
         private Border headerBorder = new CompoundBorder(new LineBorder(Color.GRAY, 1, false), new EmptyBorder(2, 8, 2, 8));
@@ -422,7 +388,7 @@ private void jScrollPane1AncestorAdded(javax.swing.event.AncestorEvent evt) {//G
      * Defines how table cells will look like
      */
     public class ImageDefsTableRenderer extends JLabel implements TableCellRenderer {
-        
+
         private boolean isSelected;
         private boolean hasFocus;
         private Font fontArial = Font.decode("Arial-12");
@@ -433,11 +399,9 @@ private void jScrollPane1AncestorAdded(javax.swing.event.AncestorEvent evt) {//G
          * the table
          */
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-			if(table == null || value == null)//Err#001  value: 21.3.2020
-					return null;
             this.setOpaque(true);
             this.setBorder(new EmptyBorder(1, 8, 1, 8));
-            
+
             if (isSelected) {
                 setForeground(Color.WHITE);
                 setBackground(table.getSelectionBackground());
@@ -464,9 +428,9 @@ private void jScrollPane1AncestorAdded(javax.swing.event.AncestorEvent evt) {//G
      * For setting and retrieving table data
      */
     private class ImageDefsTableModel extends AbstractTableModel {
-        
+
         public String getColumnName(int col) {
-            
+
             switch (col) {
                 case 0:
                     return "Linked Images";
@@ -492,7 +456,7 @@ private void jScrollPane1AncestorAdded(javax.swing.event.AncestorEvent evt) {//G
             int count = imgs.getImagesCount();
             return Math.max(8, count);
         }
-        
+
         public int getColumnCount() {
             return 4;
         }
@@ -538,9 +502,6 @@ private void jScrollPane1AncestorAdded(javax.swing.event.AncestorEvent evt) {//G
                     label.setIcon(null);
                     break;
                 case 2://stack structure
-		    int nch = imj.getNumberOfChannels();
-  		    int nfr = imj.getNumberOfFrames();
- 		    int nsl = imj.getNumberOfSlices();
                     if ((imj.getNumberOfChannels() > 1) || (imj.getNumberOfFrames() > 1)) {
                         int stackSize = imj.getNumberOfChannels() * imj.getNumberOfSlices() * imj.getNumberOfFrames();
                         label.setText(Integer.toString(stackSize) + " = " + imj.getNumberOfChannels() + "*" + imj.getNumberOfSlices() + "*" + imj.getNumberOfFrames());
@@ -581,15 +542,15 @@ private void jScrollPane1AncestorAdded(javax.swing.event.AncestorEvent evt) {//G
             }
             return label;
         }
-        
+
         public boolean isCellEditable(int row, int col) {
             return false;
         }
-        
+
         public void fireTableUpdated() {
             fireTableRowsUpdated(0, getRowCount());
         }
-        
+
         public void fireTableRowUpdated(int index) {
             fireTableRowsUpdated(index, index);
         }
@@ -610,15 +571,15 @@ private void jScrollPane1AncestorAdded(javax.swing.event.AncestorEvent evt) {//G
     public synchronized void cellChanged(CellChangedEventOJ evt) {//9.9.2009
         ((ImageDefsTableModel) tblImageDefs.getModel()).fireTableUpdated();
     }
-    
+
     public void ignoreRepaint(boolean flag) {
         tblImageDefs.setIgnoreRepaint(flag);
     }
-    
+
     public Dimension getPanelSize() {
         return panelSize;
     }
-    
+
     public void setPanelSize(Dimension panelSize) {
         this.panelSize = panelSize;
     }

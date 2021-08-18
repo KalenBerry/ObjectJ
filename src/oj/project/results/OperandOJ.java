@@ -11,7 +11,7 @@ import oj.project.BaseAdapterOJ;
 public class OperandOJ extends BaseAdapterOJ {
 
     private static final long serialVersionUID = 8877223348263168117L;
-    private String ytemName;
+    private String objectName;
     private int objectClone = 0;
     private int relPosition = 0;
 
@@ -19,23 +19,23 @@ public class OperandOJ extends BaseAdapterOJ {
     }
 
     private void writeObject(ObjectOutputStream stream) throws IOException {
-        stream.writeUTF(ytemName);
+        stream.writeUTF(objectName);
         stream.writeInt(objectClone);
         stream.writeInt(relPosition);
     }
 
     private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
-        ytemName = stream.readUTF();
+        objectName = stream.readUTF();
         objectClone = stream.readInt();
         relPosition = stream.readInt();
     }
 
     public String getObjectName() {
-        return ytemName;
+        return objectName;
     }
 
     public void setYtemName(String objectName) {
-        this.ytemName = objectName;
+        this.objectName = objectName;
         changed = true;
     }
 

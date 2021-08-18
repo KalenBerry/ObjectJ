@@ -16,7 +16,13 @@ import java.awt.Graphics;
  */
 public class RoundPanelOJ extends javax.swing.JPanel {
     
-    /** Creates new form RoundPanelOJ */
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+
+	/** Creates new form RoundPanelOJ */
     public RoundPanelOJ() {
         initComponents();
         setOpaque(false);

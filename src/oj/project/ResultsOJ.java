@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import oj.project.results.ColumnOJ;
 import oj.project.results.ColumnsOJ;
-//import oj.project.results.PlotsOJ;
+import oj.project.results.PlotsOJ;
 import oj.project.results.QualifierOJ;
 import oj.project.results.QualifiersOJ;
 import oj.project.results.statistics.StatisticsOJ;
@@ -21,7 +21,7 @@ public class ResultsOJ extends BaseAdapterOJ {
     public StatisticsOJ statistics = new StatisticsOJ();
     public QualifiersOJ qualifiers = new QualifiersOJ();
     public ColumnsOJ columns = new ColumnsOJ();
-   // public PlotsOJ plots = new PlotsOJ();
+    public PlotsOJ plots = new PlotsOJ();
 
     /**
      * Creates a new instance of ResultsOJ
@@ -34,13 +34,14 @@ public class ResultsOJ extends BaseAdapterOJ {
         statistics.setParent(this);
         qualifiers.setParent(this);
         columns.setParent(this);
-        //plots.setParent(this);
+        plots.setParent(this);
     }
 
-//    public PlotsOJ getPlots() {
-//        return plots;
-//    }
-
+    public PlotsOJ getPlots(){
+      return plots;
+    }
+            
+                        
     public ColumnsOJ getColumns() {
         return columns;
     }
@@ -66,7 +67,7 @@ public class ResultsOJ extends BaseAdapterOJ {
         columns.setChanged(changed);
         qualifiers.setChanged(changed);
         statistics.setChanged(changed);
-        //plots.setChanged(changed);
+        plots.setChanged(changed);
     }
 
     public void initAfterUnmarshalling(IBaseOJ parent) {
@@ -75,28 +76,32 @@ public class ResultsOJ extends BaseAdapterOJ {
             qualifiers = new QualifiersOJ();
         }
         qualifiers.initAfterUnmarshalling(this);
-
+        
         if (statistics == null) {
             statistics = new StatisticsOJ();
         }
         statistics.initAfterUnmarshalling(this);
-
+        
         if (columns == null) {
             columns = new ColumnsOJ();
         }
         columns.initAfterUnmarshalling(this);
 
-//        if (plots == null) {
-//            plots = new PlotsOJ();
-//        }
-//        plots.initAfterUnmarshalling(this);
-    }
+            if (plots == null) {
+            plots = new PlotsOJ();
+        }
+        plots.initAfterUnmarshalling(this);
+}
 
-    public int[] getSortedIndexes(boolean ignored) {
+    public int[] getSortedIndexes(boolean unlinkedResults) {
         int[] result = new int[0];
         String sort_name = null;
         int sort_flag = ColumnsOJ.COLUM_SORT_FLAG_NONE;
-         {
+        if (unlinkedResults) {
+            sort_name = columns.getColumnUnlinkedSortName();
+            sort_flag = columns.getColumnUnlinkedSortFlag();
+            result = new int[getUnlinkedResultsCount()];
+        } else {
             sort_name = columns.getColumnLinkedSortName();
             sort_flag = columns.getColumnLinkedSortFlag();
             result = new int[((DataOJ) parent).getCells().getCellsCount()];
@@ -308,35 +313,34 @@ public class ResultsOJ extends BaseAdapterOJ {
 
     //narrows selection by disqualifying more cells in qualified_cells array
     private void applyOneCondition(String columnName, int operation, double minValue, double maxValue, boolean[] qualified_cells) {
-        ColumnOJ column = columns.getColumnByName(columnName);
-        
+        ColumnOJ coj = columns.getColumnByName(columnName);
         if ((operation == QualifierOJ.OPERATION_NOT_WITHIN) || (operation == QualifierOJ.OPERATION_WITHIN)) {
-            for (int i = 0; i < column.getResultCount(); i++) {
-                if (!QualifierOJ.qualify(column.getDoubleResult(i), minValue, maxValue, operation)) {
+            for (int i = 0; i < coj.getResultCount(); i++) {
+                if (!QualifierOJ.qualify(coj.getDoubleResult(i), minValue, maxValue, operation)) {
                     qualified_cells[i] = false;
                 }
             }
             if (operation == QualifierOJ.OPERATION_NOT_WITHIN) {
-                for (int k = column.getResultCount(); k < ((DataOJ) parent).getCells().getCellsCount(); k++) {
+                for (int k = coj.getResultCount(); k < ((DataOJ) parent).getCells().getCellsCount(); k++) {
                     qualified_cells[k] = false;
                 }
             }
         } else if ((operation == QualifierOJ.OPERATION_EXISTS) || (operation == QualifierOJ.OPERATION_EMPTY)) {
-            for (int i = 0; i < column.getResultCount(); i++) {
-                if (!QualifierOJ.qualify(column.getDoubleResult(i), operation)) {
+            for (int i = 0; i < coj.getResultCount(); i++) {
+                if (!QualifierOJ.qualify(coj.getDoubleResult(i), operation)) {
                     qualified_cells[i] = false;
                 }
             }
-            for (int k = column.getResultCount(); k < ((DataOJ) parent).getCells().getCellsCount(); k++) {
+            for (int k = coj.getResultCount(); k < ((DataOJ) parent).getCells().getCellsCount(); k++) {
                 qualified_cells[k] = false;
             }
         } else {
-            for (int i = 0; i < column.getResultCount(); i++) {
-                if (!QualifierOJ.qualify(column.getDoubleResult(i), minValue, operation)) {
+            for (int i = 0; i < coj.getResultCount(); i++) {
+                if (!QualifierOJ.qualify(coj.getDoubleResult(i), minValue, operation)) {
                     qualified_cells[i] = false;
                 }
             }
-            for (int k = column.getResultCount(); k < ((DataOJ) parent).getCells().getCellsCount(); k++) {
+            for (int k = coj.getResultCount(); k < ((DataOJ) parent).getCells().getCellsCount(); k++) {
                 qualified_cells[k] = false;
             }
         }
@@ -424,7 +428,16 @@ public class ResultsOJ extends BaseAdapterOJ {
         return ((DataOJ) parent).getCells().getCellsCount();
     }
 
- 
+    public int getUnlinkedResultsCount() {
+        int count = 0;
+        for (int i = 0; i < columns.getAllColumnsCount(); i++) {
+            if (columns.getColumnByIndex(i).isUnlinkedColumn()) {
+                count = count > columns.getColumnByIndex(i).getResultCount() ? count : columns.getColumnByIndex(i).getResultCount();
+            }
+        }
+        return count;
+    }
+
     class StringComparator implements Comparator {
 
         public int compare(Object arg0, Object arg1) {

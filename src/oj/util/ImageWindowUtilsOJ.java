@@ -8,7 +8,6 @@ import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageWindow;
-import ij.io.FileInfo;
 import java.awt.Container;
 import java.awt.Insets;
 import java.lang.reflect.Field;
@@ -101,13 +100,10 @@ public class ImageWindowUtilsOJ {
         for (int jj = 0; jj < ids.length; jj++) {
             ImagePlus imp = WindowManager.getImage(ids[jj]);
             if (imp != null) {
-                FileInfo fi = imp.getOriginalFileInfo();
-                if (fi != null) {
-                    String path2 = fi.directory + fi.fileName;
-                    if (path2.equals(path1)) {
-                        return imp;
-                    }
-
+                String name = imp.getOriginalFileInfo().fileName;
+                String path2 = imp.getOriginalFileInfo().directory + name;
+                if (path2.equals(path1)) {
+                    return imp;
                 }
             }
         }
